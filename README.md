@@ -2,7 +2,18 @@
 
 **Tooth Puller** (originally published to npm as `binary-extractor`) is a small library for reading structured data out of raw binary buffers — originally written for **Creatures 2** "history file" (`.chr`) genealogy records, but generic enough for any length-prefixed or fixed-width binary format.
 
-This repo now also includes **`index.html`** — a standalone, browser-based extraction lab built on top of that same reading logic. Drop in a file, and inspect it completely client-side. Nothing is uploaded anywhere; all parsing happens in your own browser tab.
+This repo now also includes **`index.html`** — a standalone, browser-based extraction lab built on top of that same reading logic. Drop in a file, and inspect it entirely client-side. Nothing is uploaded anywhere; all parsing happens in your own browser tab.
+
+The on-page UI is kept deliberately minimal — short labels, no embedded tutorials. Everything explained below (what each tab does, why it matters, what to use it for) lives here in the README rather than cluttering the tool itself.
+
+---
+
+## Analytics & sharing
+
+- **Google Analytics (GA4)** is wired via `gtag.js` with **Consent Mode v2**: analytics storage defaults to `denied` and only switches to `granted` after the visitor clicks "OK" on the cookie banner. No tracking fires before consent.
+- **Open Graph / Twitter Card / JSON-LD** metadata is in place so links shared on Slack, Discord, X, iMessage, etc. render a proper preview card — title, description, and `og-image.png` (1200×630, generated to match the site's own theme).
+- `favicon.svg` is a small on-brand mark (the forceps icon from the drop zone) rather than a generic default.
+- `canonical` and `robots` tags point at `https://sauerninja.github.io/Tooth-Puller/` — update that URL if the repo or Pages path ever changes.
 
 ---
 
@@ -29,19 +40,30 @@ Runs automatically the moment a file loads, before any of the detailed sections 
 Every card is explicitly labeled with a signal count and falls back to "no signal found" rather than guessing. A permanent disclaimer sits under the grid: **this is a heuristic estimate from static strings/timestamps/signature only — not a verified fact and not a security verdict.**
 - *Use for:* a fast first-look summary before diving into hex/strings manually; surfacing the "interesting" signals (a stray email, a build timestamp, a suspicious URL) without having to scroll strings by hand.
 
-### Download full report (.txt)
-A button in the Profile section compiles everything the lab currently knows about the loaded file into a single downloadable plain-text report — including:
+### Export bundle (.zip)
+The primary action in the Profile section. Bundles everything into one downloadable archive:
+- `report.txt` — the same full report described below
+- `histogram.png` and `entropy-map.png` — the actual rendered graphs from the Structure section, exported as real PNG images (via canvas `toBlob`)
+- `checksums.txt` — SHA-256 of each file in the bundle, so the export itself can be verified as unaltered after the fact
+
+A secondary **"Text report only (.txt)"** button remains for anyone who just wants the plain-text version without the zip/images. Both are generated entirely client-side (JSZip + Web Crypto); nothing is transmitted anywhere. Bundle filename format: `tooth-puller-export_<original-filename>.zip`.
+
+### Full report contents (`report.txt`)
+Everything the lab currently knows about the loaded file, not a summary:
 - Generation timestamp and a link back to this repo (`https://github.com/SauerNinja/Tooth-Puller`)
-- File name, size, and detected signature
+- File name, size, detected signature, and first-16-bytes magic header
+- Full zip entry listing (path, size, date) if a zip is loaded
 - SHA-1 / SHA-256 hashes
 - The full Who/What/When/Where/Why/How profile
 - Overall entropy score, extension-match result, and (for PE files) the parsed section table with per-section entropy and overlay-data check
-- Current extraction chart field values
-- Up to the first 50 extracted strings (with offsets), plus a total count
+- Version/copyright/build strings, truncation check, zip checksum verification, GZIP header fields, and timestamp cross-check
+- Every extraction chart field, with its type and length, not just its value
+- **All** extracted strings with offsets (not just the first page — the full capture, up to the 5000-result scanner cap)
+- A full hex dump of the file (offset / hex / ASCII, same format as the on-screen viewer), capped at 1MB of source bytes to keep the report file itself manageable — clearly noted if truncated
 - A note clarifying the report is a static, read-only inspection summary — not a malware verdict or provenance proof
 
 Everything is generated client-side via `Blob` + a synthetic download link; nothing is transmitted anywhere. Filename format: `tooth-puller-report_<original-filename>.txt`.
-- *Use for:* keeping a portable record of what a file contained without keeping the file itself; sharing findings with someone else without re-uploading the binary; a paper trail before deciding what to do with a file.
+- *Use for:* keeping a portable, complete record of what a file contained without keeping the file itself; sharing findings with someone else without re-uploading the binary; a paper trail before deciding what to do with a file.
 
 ### 1. Source — file & zip loading
 Drop or browse to any file.
@@ -89,6 +111,22 @@ Four sub-tabs — the closest thing here to an actual x-ray of the file's intern
 - **Extension check** — compares the file's actual detected signature against what its filename extension claims, across roughly 30 known extension/signature pairings, and clearly flags a mismatch (e.g. a `.jpg` that's actually a PE executable — a classic disguise trick used in phishing attachments).
   - *Use for:* a quick sanity check before opening a file whose extension you don't fully trust.
 
+### 6. Integrity & versions
+Five sub-tabs focused on catching things a byte-level view alone won't tell you:
+
+- **Versions & copyright** — scans embedded strings for version numbers (`v1.2.3`), copyright lines (`Copyright © 2019 ...`), and build numbers (`Build 4821`), tagged and listed with offsets.
+  - *Use for:* quickly finding which version of software produced a file, or spotting copyright/licensing text without reading every string by hand.
+- **Truncation check** — for PE files, compares the section table's declared data range against the actual file size; for RIFF-based files (WAV/AVI/WEBP), compares the header's declared chunk size against the bytes that actually follow. Flags a mismatch as likely truncation.
+  - *Use for:* catching a file that was cut off mid-download, mid-copy, or mid-transfer before you try to open it in something else and get a confusing error.
+- **Zip checksum** — for the currently selected entry inside a loaded zip, recomputes its CRC32 from the extracted bytes and compares it against the checksum stored in the zip's own directory.
+  - *Use for:* verifying a specific file inside an archive wasn't corrupted during compression, storage, or transfer — independent of the overall SHA-256 of the outer zip file.
+- **GZIP header** — for `.gz` files, parses the original filename and modification time actually embedded in the GZIP header (separate from the outer file's own filesystem timestamp), plus the declared compression method.
+  - *Use for:* recovering the true original filename/date of a gzip-compressed file, which often differs from whatever the current `.gz` file happens to be named.
+- **Timestamp cross-check** — pulls every timestamp the lab has already found (PE compile time, zip entry dates, date-like strings) and checks whether they're consistent or span multiple years.
+  - *Use for:* a lightweight tamper/repackaging signal — a large spread between embedded dates can mean a file was reassembled or edited well after its apparent original creation.
+
+Corrupted or truncated `.zip` files that fail to parse are now caught gracefully (rather than crashing the page) and fall back to raw hex/strings/entropy inspection with a clear note. The zip entry listing also now shows each file's compression method (stored vs. deflate).
+
 ---
 
 ## What else this approach can do (not yet built)
@@ -106,6 +144,17 @@ These are natural extensions of the same "look inside without modifying anything
 - **Multi-file batch mode** — drop several files at once and get a summary table (type, size, hash, entropy) instead of inspecting one at a time.
 - **PE import table listing** — list which Windows API functions an `.exe`/`.dll` references (separate from the section table already built — this would parse the import directory specifically). Purely informational (e.g. seeing `VirtualAlloc` + `WriteProcessMemory` + `CreateRemoteThread` together is a commonly-cited pattern) — a flag for the viewer to research further, never a verdict.
 - **Double-extension / RTLO filename check** — flag classic phishing-attachment filename tricks (`invoice.pdf.exe`, right-to-left-override unicode tricks) — complementary to the signature/extension mismatch check already built.
+- **PNG/zip internal checksum verification beyond CRC32** — the zip-entry CRC32 check above covers zip; PNG chunk CRCs and other per-format internal checksums would need their own parsers.
+- **Office Open XML metadata** (`.docx`/`.xlsx`/`.pptx` `core.xml`/`app.xml`) — author, last-modified-by, company, and edit-time fields; the richest "who touched this file" source available for these formats, and the zip browser already built could surface it directly.
+- **Font file parsing** (TTF/OTF) — embedded name/copyright/foundry table.
+- **Certificate/Authenticode parsing** — signer identity and cert chain for signed PE files.
+- **Image header dimensions** — width/height/bit-depth without a full decode, for BMP/PNG/JPEG/GIF/ICO.
+- **LSB steganography indicator** — statistical check on image pixel low-bits for non-randomness (detection only, never decoding).
+- **ID3/Vorbis audio tag reader** — artist/album/title/encoder tags in MP3/OGG/WAV.
+- **JSON/XML/INI structure validator** — pretty-print and validate text-based config formats instead of showing raw strings.
+- **Text encoding detection** — sniff UTF-8 / UTF-16 / Latin-1 rather than assuming ASCII.
+- **Session history** — a running, in-memory (never persisted) list of files inspected this session for anyone triaging several files in a row.
+- **JSON report export** — alongside the current `.txt`, for piping results into another tool.
 
 Anything in the "sus-sniffing" category above stays limited to **static indicator flagging** — it should never execute, decrypt, unpack, or deobfuscate anything, and it should never produce a "malicious/clean" verdict. That's the job of dedicated engines with signature databases and sandboxing. This tool is meant as a first-look triage aid, not a scanner.
 

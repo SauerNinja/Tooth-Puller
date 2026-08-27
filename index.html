@@ -1,10 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) with Consent Mode v2 — default denied until cookie banner is accepted -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-D8BJRXQ4XY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    'analytics_storage': 'denied',
+    'ad_storage': 'denied',
+    'ad_user_data': 'denied',
+    'ad_personalization': 'denied'
+  });
+  gtag('js', new Date());
+  gtag('config', 'G-D8BJRXQ4XY');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tooth Puller — Binary Extraction Lab</title>
-<meta name="description" content="Drop in a zip or binary file and extract its bytes in your browser. No uploads, no server — everything stays local.">
+<meta name="description" content="Drop in a zip or binary file and extract its bytes in your browser. Hex viewer, extraction chart, entropy/signature analysis, and a downloadable report — nothing uploaded, everything runs client-side.">
+<meta name="keywords" content="binary extractor, hex viewer, file signature detector, entropy analysis, zip inspector, PE section parser, browser forensics tool, Creatures 2 history file">
+<link rel="canonical" href="https://sauerninja.github.io/Tooth-Puller/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0A0D10">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Tooth Puller — Binary Extraction Lab">
+<meta property="og:description" content="Drop in a zip or binary file and extract its bytes in your browser. Hex viewer, extraction chart, entropy/signature analysis, and a downloadable report — nothing uploaded, everything runs client-side.">
+<meta property="og:url" content="https://sauerninja.github.io/Tooth-Puller/">
+<meta property="og:site_name" content="Tooth Puller">
+<meta property="og:image" content="https://sauerninja.github.io/Tooth-Puller/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Tooth Puller — Binary Extraction Lab">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tooth Puller — Binary Extraction Lab">
+<meta name="twitter:description" content="Drop in a zip or binary file and extract its bytes in your browser. Hex viewer, extraction chart, entropy/signature analysis, and a downloadable report — nothing uploaded, everything runs client-side.">
+<meta name="twitter:image" content="https://sauerninja.github.io/Tooth-Puller/og-image.png">
+<meta name="twitter:image:alt" content="Tooth Puller — Binary Extraction Lab">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Tooth Puller",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any (runs in browser)",
+  "description": "A browser-based binary and zip extraction lab: hex viewer, sequential field extraction chart, file signature and entropy analysis, and a downloadable report — everything runs client-side.",
+  "url": "https://sauerninja.github.io/Tooth-Puller/",
+  "author": { "@type": "Person", "name": "Setvin Noether" },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Special+Elite&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,8 +68,8 @@
     --line:#232B31;
     --bone:#E9E3D3;
     --bone-dim:#A9A290;
-    --teal:#4CD6C0;
-    --teal-dim:#2C7A6F;
+    --teal:#F7931A;
+    --teal-dim:#8a5313;
     --amber:#E3A23C;
     --rust:#C1502E;
     --mono:'IBM Plex Mono', monospace;
@@ -120,7 +172,7 @@
   .toc span.n{color:var(--teal); margin-right:6px;}
 
   /* ---------- Workspace panels ---------- */
-  section.panel{margin-top:40px; display:none;}
+  section.panel{margin-top:48px; display:none;}
   section.panel.active{display:block;}
   .panel h2{
     font-family:var(--chart); font-size:22px; font-weight:400; color:var(--bone);
@@ -128,7 +180,7 @@
   }
   .panel .sub{font-size:13px; color:var(--bone-dim); margin-bottom:18px; font-family:var(--mono);}
 
-  .card{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:22px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:22px; box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 8px 24px -12px rgba(0,0,0,.5);}
   .filemeta{display:flex; flex-wrap:wrap; gap:24px; font-family:var(--mono); font-size:12.5px; color:var(--bone-dim); margin-bottom:18px;}
   .filemeta b{color:var(--bone); font-weight:600;}
 
@@ -250,7 +302,7 @@
 
 <nav class="top-nav">
   <div class="brand">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2c-3 0-5 2-5 5 0 2 .5 3 .5 5 0 3 1 8 2 9 .8.8 1.5-1 1.5-3.5 0-1 .5-1.5 1-1.5s1 .5 1 1.5c0 2.5.7 4.3 1.5 3.5 1-1 2-6 2-9 0-2 .5-3 .5-5 0-3-2-5-5-5z"/></svg>
+    <svg viewBox="0 0 64 64" style="width:20px;height:20px;"><path fill="#F7931A" d="M32 10c-6.5 0-11 4.6-11 10.2 0 3.4 1 6.9 1.9 10.2.5 1.9 1 3.7 1.2 5.4.4 3.1.6 6.9 1.4 9.4.5 1.6 1.3 2.8 2.7 2.8 1.7 0 2.2-1.9 2.5-4 .3-2 .4-4.6 1.3-4.6s1 2.6 1.3 4.6c.3 2.1.8 4 2.5 4 1.4 0 2.2-1.2 2.7-2.8.8-2.5 1-6.3 1.4-9.4.2-1.7.7-3.5 1.2-5.4.9-3.3 1.9-6.8 1.9-10.2C43 14.6 38.5 10 32 10z"/></svg>
     Tooth Puller
   </div>
   <div class="links">
@@ -263,22 +315,19 @@
   <div class="eyebrow">Binary Extraction Lab</div>
   <h1>Pull the bytes<br>straight <em>out</em> of the file.</h1>
   <p class="lede">
-    A browser-based extraction chart for binary files and zip archives, built on the original
-    <strong>Tooth Puller / binary-extractor</strong> reader used for Creatures&nbsp;2 history files.
-    Drop a file below and read it byte-by-byte — nothing is uploaded anywhere.
+    Drop a file below and read it byte-by-byte, entirely in your browser.
   </p>
   <div class="local-note">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-    Runs entirely in this tab. Files are read locally and never leave your device.
+    Nothing leaves your device. Full details in the README.
   </div>
 </header>
 
 <main class="lab" id="lab">
 
   <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload a file to extract">
-    <svg class="forceps" viewBox="0 0 24 24" fill="none" stroke="#4CD6C0" stroke-width="1.4">
-      <path d="M8 2c2 3 2 6 0 9M16 2c-2 3-2 6 0 9M8 11c0 4 1.2 7 1.2 9.5 0 1 .5 1.5 1 1.5M16 11c0 4-1.2 7-1.2 9.5 0 1-.5 1.5-1 1.5"/>
-      <path d="M8 2 6.5 3.3M16 2l1.5 1.3"/>
+    <svg class="forceps" viewBox="0 0 64 64">
+      <path fill="#F7931A" d="M32 10c-6.5 0-11 4.6-11 10.2 0 3.4 1 6.9 1.9 10.2.5 1.9 1 3.7 1.2 5.4.4 3.1.6 6.9 1.4 9.4.5 1.6 1.3 2.8 2.7 2.8 1.7 0 2.2-1.9 2.5-4 .3-2 .4-4.6 1.3-4.6s1 2.6 1.3 4.6c.3 2.1.8 4 2.5 4 1.4 0 2.2-1.2 2.7-2.8.8-2.5 1-6.3 1.4-9.4.2-1.7.7-3.5 1.2-5.4.9-3.3 1.9-6.8 1.9-10.2C43 14.6 38.5 10 32 10z"/>
     </svg>
     <div class="dz-title">Drop a .zip or any binary file here</div>
     <div class="dz-sub">or <span class="accent">click to browse</span> — any file type accepted</div>
@@ -292,17 +341,19 @@
     <a href="#sec-chart"><span class="n">03</span>Extraction chart</a>
     <a href="#sec-forensics"><span class="n">04</span>Strings &amp; signatures</a>
     <a href="#sec-structure"><span class="n">05</span>Structure</a>
+    <a href="#sec-integrity"><span class="n">06</span>Integrity &amp; versions</a>
   </nav>
 
   <!-- PROFILE ESTIMATE -->
   <section class="panel" id="sec-profile">
     <h2>00 — Profile estimate</h2>
-    <div class="sub">A first-pass read of the file, before the details — inferred from embedded strings, timestamps and signature only. Heuristic, not verified fact.</div>
+    <div class="sub">Read before the details. Heuristic, not verified fact.</div>
     <div class="card">
       <div class="profile-grid" id="profileGrid"></div>
       <div class="chart-controls" style="margin-top:18px;">
-        <button class="btn primary" id="downloadReportBtn">⬇ Download full report (.txt)</button>
-        <span style="font-family:var(--mono); font-size:11.5px; color:var(--bone-dim); align-self:center;">Includes profile, hash, structure/entropy, chart fields, strings, and a link back to the repo.</span>
+        <button class="btn primary" id="exportZipBtn">⬇ Export bundle (.zip)</button>
+        <button class="btn small" id="downloadReportBtn">Text report only (.txt)</button>
+        <span id="exportStatus" style="font-family:var(--mono); font-size:11.5px; color:var(--bone-dim); align-self:center;">Report + graphs + SHA-256 checksums</span>
       </div>
     </div>
   </section>
@@ -323,7 +374,7 @@
   <!-- HEX VIEWER -->
   <section class="panel" id="sec-hex">
     <h2>02 — Hex viewer</h2>
-    <div class="sub">Raw bytes of the currently selected file, offset + hex + ASCII.</div>
+    <div class="sub">Offset · hex · ASCII</div>
     <div class="card">
       <div class="hexwrap">
         <table class="hexgrid" id="hexTable">
@@ -340,7 +391,7 @@
   <!-- EXTRACTION CHART -->
   <section class="panel" id="sec-chart">
     <h2>03 — Extraction chart</h2>
-    <div class="sub">Define fields to read sequentially from the buffer — like a dental chart, one tooth (field) at a time. Matches the original Tooth Puller reader methods.</div>
+    <div class="sub">Sequential field reader — matches the original Tooth Puller methods.</div>
     <div class="card">
       <div class="chart-row head">
         <div>#</div><div>Field name</div><div>Type</div><div>Len</div><div>Value</div><div></div>
@@ -352,18 +403,14 @@
         <button class="btn small danger" id="resetChart">Reset</button>
         <button class="btn small primary" id="copyJson" style="margin-left:auto;">Copy result as JSON</button>
       </div>
-      <div class="preset-note">
-        Types mirror the original library: <b>Byte</b> (1B), <b>Word</b> (2B, uint16 LE), <b>Long</b> (4B, uint32 LE),
-        <b>Bytes</b> (raw, N bytes → hex), <b>LString</b> (length-prefixed string, Creatures-style).
-        Fields read in order, each consuming from where the last left off.
-      </div>
+      <div class="preset-note">Byte 1B · Word 2B · Long 4B · Bytes N→hex · LString length-prefixed. Types explained in README.</div>
     </div>
   </section>
 
   <!-- FORENSICS: STRINGS + SIGNATURE -->
   <section class="panel" id="sec-forensics">
     <h2>04 — Strings &amp; signatures</h2>
-    <div class="sub">Passive, read-only analysis — the same thing tools like <code>file</code>, <code>exiftool</code> and <code>strings</code> do.</div>
+    <div class="sub">Signature, extracted strings, and hash — read-only.</div>
     <div class="card">
       <div class="tabs">
         <button class="tab-btn active" data-tab="tab-sig">File signature</button>
@@ -406,7 +453,7 @@
   <!-- STRUCTURE: HISTOGRAM, ENTROPY, PE SECTIONS, EXT CHECK -->
   <section class="panel" id="sec-structure">
     <h2>05 — Structure</h2>
-    <div class="sub">Visual byte distribution, entropy, and (for Windows PE files) an internal section table — the closest thing here to an actual x-ray.</div>
+    <div class="sub">Byte distribution, entropy, PE section table.</div>
     <div class="card">
       <div class="tabs">
         <button class="tab-btn active" data-tab="tab-histogram">Byte histogram</button>
@@ -417,7 +464,7 @@
 
       <div class="tab-content active" id="tab-histogram">
         <canvas id="histCanvas" width="900" height="220" style="width:100%; height:220px; display:block; background:#0D1114; border:1px solid var(--line); border-radius:4px;"></canvas>
-        <div class="preset-note" id="histNote">256 buckets (byte values 0–255), height = frequency. Text files cluster in the printable-ASCII range (32–126); compressed/encrypted data spreads evenly.</div>
+        <div class="preset-note" id="histNote">256 buckets, byte values 0–255.</div>
       </div>
 
       <div class="tab-content" id="tab-entropy">
@@ -431,6 +478,47 @@
 
       <div class="tab-content" id="tab-extcheck">
         <div class="filemeta" id="extCheckResult" style="margin-bottom:0;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTEGRITY & VERSIONS -->
+  <section class="panel" id="sec-integrity">
+    <h2>06 — Integrity &amp; versions</h2>
+    <div class="sub">Version strings, truncation, checksums, timestamps.</div>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-versions">Versions &amp; copyright</button>
+        <button class="tab-btn" data-tab="tab-truncation">Truncation check</button>
+        <button class="tab-btn" data-tab="tab-zipintegrity">Zip checksum</button>
+        <button class="tab-btn" data-tab="tab-gzip">GZIP header</button>
+        <button class="tab-btn" data-tab="tab-tscross">Timestamp cross-check</button>
+      </div>
+
+      <div class="tab-content active" id="tab-versions">
+        <div class="hexwrap" style="max-height:300px;">
+          <table class="hexgrid" id="versionTable">
+            <thead><tr><th style="width:90px;">Offset</th><th>Match</th></tr></thead>
+            <tbody id="versionBody"></tbody>
+          </table>
+        </div>
+        <div class="preset-note" id="versionNote">Version, copyright, and build strings.</div>
+      </div>
+
+      <div class="tab-content" id="tab-truncation">
+        <div class="filemeta" id="truncationResult" style="margin-bottom:0;"></div>
+      </div>
+
+      <div class="tab-content" id="tab-zipintegrity">
+        <div id="zipIntegrityArea"></div>
+      </div>
+
+      <div class="tab-content" id="tab-gzip">
+        <div class="filemeta" id="gzipResult" style="margin-bottom:0;"></div>
+      </div>
+
+      <div class="tab-content" id="tab-tscross">
+        <div class="filemeta" id="tsCrossResult" style="margin-bottom:0;"></div>
       </div>
     </div>
   </section>
@@ -460,10 +548,19 @@ window.addEventListener('scroll', () => {
 /* ---------- cookie banner ---------- */
 (function(){
   const b = document.getElementById('cookieBanner');
-  if(localStorage.getItem('tp_cookie_ok')){ b.style.display='none'; }
+  const grantConsent = () => {
+    if(typeof gtag === 'function'){
+      gtag('consent', 'update', { 'analytics_storage': 'granted' });
+    }
+  };
+  if(localStorage.getItem('tp_cookie_ok')){
+    b.style.display='none';
+    grantConsent();
+  }
   document.getElementById('cookieOk').addEventListener('click', () => {
     localStorage.setItem('tp_cookie_ok','1');
     b.style.display='none';
+    grantConsent();
   });
 })();
 
@@ -541,7 +638,16 @@ async function handleFile(file){
   if(isZip){
     document.getElementById('sourceSub').textContent = 'Zip archive — browse entries below, click one to inspect its bytes.';
     const buf = await file.arrayBuffer();
-    zip = await JSZip.loadAsync(buf);
+    try{
+      zip = await JSZip.loadAsync(buf);
+    } catch(zipErr){
+      document.getElementById('sourceSub').textContent = 'This file has a .zip extension but failed to parse as a valid archive — likely corrupted or truncated.';
+      document.getElementById('zipArea').style.display = 'none';
+      zip = null;
+      // still load it as a raw binary so hex/entropy/strings remain available
+      setCurrentBuffer(new Uint8Array(buf), file.name);
+      return;
+    }
     zipPath = '';
     document.getElementById('zipArea').style.display = 'block';
     renderZipListing();
@@ -567,6 +673,7 @@ function setCurrentBuffer(u8, name){
   renderSignature();
   buildProfile();
   renderStructure();
+  renderIntegrity();
   document.getElementById('strBody').innerHTML = '';
   document.getElementById('strCount').textContent = '';
   renderHash();
@@ -852,7 +959,16 @@ function buildReportText(){
   lines.push(`Name: ${currentName || 'n/a'}`);
   lines.push(`Size: ${currentBuffer ? currentBuffer.length + ' bytes (' + fmtBytes(currentBuffer.length) + ')' : 'n/a'}`);
   lines.push(`Detected signature: ${p.whatType || 'n/a'}`);
+  lines.push(`First 16 bytes (magic): ${currentBuffer ? bytesToHex(currentBuffer.slice(0, Math.min(16, currentBuffer.length))) : 'n/a'}`);
   lines.push('');
+
+  if(zip){
+    lines.push('-- ZIP CONTENTS --');
+    const entries = Object.values(zip.files).filter(f => !f.dir);
+    lines.push(`${entries.length} file(s) in archive:`);
+    entries.forEach(f => lines.push(`  - ${f.name}  (${fmtBytes(f._data ? f._data.uncompressedSize : 0)}${f.date ? ', ' + f.date.toISOString() : ''})`));
+    lines.push('');
+  }
   lines.push('-- HASH --');
   const hashEl = document.getElementById('hashResult');
   if(hashEl){
@@ -895,16 +1011,55 @@ function buildReportText(){
   }
   lines.push('');
 
-  lines.push('-- EXTRACTION CHART --');
-  (window._lastChartResults || []).forEach(([k,v]) => lines.push(`  ${k}: ${v}`));
-  if(!window._lastChartResults || !window._lastChartResults.length) lines.push('  (no fields defined)');
+  lines.push('-- INTEGRITY & VERSIONS --');
+  lines.push('Version/copyright/build strings:');
+  (window._lastVersions || []).forEach(([off, kind, val]) => lines.push(`  [${off.toString(16).padStart(8,'0')}] (${kind}) ${val}`));
+  if(!window._lastVersions || !window._lastVersions.length) lines.push('  (none found)');
+  const truncEl = document.getElementById('truncationResult');
+  if(truncEl) lines.push('Truncation check: ' + truncEl.textContent.trim());
+  const zipCrcEl = document.getElementById('zipIntegrityArea');
+  if(zipCrcEl) lines.push('Zip checksum check: ' + zipCrcEl.textContent.trim());
+  const gzipEl = document.getElementById('gzipResult');
+  if(gzipEl) lines.push('GZIP header: ' + gzipEl.textContent.trim());
+  const tsEl = document.getElementById('tsCrossResult');
+  if(tsEl) lines.push('Timestamp cross-check: ' + tsEl.textContent.trim());
   lines.push('');
 
-  lines.push('-- EXTRACTED STRINGS --');
-  const strs = (window._lastStrings && window._lastStrings.length) ? window._lastStrings : (window._quickStrings || []);
-  lines.push(`  ${strs.length} string(s) captured${strs.length ? ' (first 50 shown below):' : ''}`);
-  strs.slice(0,50).forEach(([off,s]) => lines.push(`  [${off.toString(16).padStart(8,'0')}] ${s}`));
+  lines.push('-- EXTRACTION CHART --');
+  chartFields.forEach((f, i) => {
+    const val = (window._lastChartResults && window._lastChartResults[i]) ? window._lastChartResults[i][1] : '';
+    lines.push(`  #${i+1} ${f.name || '(unnamed)'} [${f.type}${f.type==='bytes' && f.len ? ' x'+f.len : ''}]: ${val}`);
+  });
+  if(!chartFields.length) lines.push('  (no fields defined)');
   lines.push('');
+
+  lines.push('-- EXTRACTED STRINGS (full) --');
+  const strs = (window._lastStrings && window._lastStrings.length) ? window._lastStrings : (window._quickStrings || []);
+  lines.push(`  ${strs.length} string(s) captured${strs.length >= 5000 ? ' (capped at 5000 by the scanner)' : ''}:`);
+  strs.forEach(([off,s]) => lines.push(`  [${off.toString(16).padStart(8,'0')}] ${s}`));
+  lines.push('');
+
+  const HEX_DUMP_CAP = 1048576; // 1 MB of source bytes -> keep the text report manageable
+  lines.push('-- HEX DUMP --');
+  if(currentBuffer){
+    const limit = Math.min(currentBuffer.length, HEX_DUMP_CAP);
+    lines.push(`Showing ${limit.toLocaleString()} of ${currentBuffer.length.toLocaleString()} bytes${limit < currentBuffer.length ? ' (truncated — file exceeds the 1MB report cap)' : ''}:`);
+    for(let row = 0; row < limit; row += 16){
+      const rowEnd = Math.min(row+16, limit);
+      const slice = currentBuffer.slice(row, rowEnd);
+      let hexStr = '', ascStr = '';
+      for(let k=0;k<slice.length;k++){
+        const b = slice[k];
+        hexStr += b.toString(16).padStart(2,'0') + ' ';
+        ascStr += (b>=32 && b<=126) ? String.fromCharCode(b) : '.';
+      }
+      lines.push(`  ${row.toString(16).padStart(8,'0')}  ${hexStr.padEnd(48,' ')} ${ascStr}`);
+    }
+  } else {
+    lines.push('  (no file loaded)');
+  }
+  lines.push('');
+
   lines.push('-- NOTE --');
   lines.push('All analysis performed locally in-browser. This report is a static, read-only');
   lines.push('inspection summary. It is not a malware verdict, legal opinion, or provenance proof.');
@@ -952,7 +1107,7 @@ function renderHistogram(buf){
   for(let i=0;i<256;i++){
     const h = (counts[i] / max) * (canvas.height - 4);
     const printable = i >= 32 && i <= 126;
-    ctx.fillStyle = printable ? '#4CD6C0' : '#E3A23C';
+    ctx.fillStyle = printable ? '#F7931A' : '#E3A23C';
     ctx.globalAlpha = counts[i] ? 0.9 : 0.15;
     ctx.fillRect(i*w, canvas.height - h, Math.max(w-0.3,0.5), h);
   }
@@ -974,7 +1129,7 @@ function renderEntropyMap(buf){
     // entropy 0-8 -> color from teal (low) to amber (mid) to rust (high/packed)
     const t = e / 8;
     let color;
-    if(t < 0.6) color = '#2C7A6F';
+    if(t < 0.6) color = '#8a5313';
     else if(t < 0.85) color = '#E3A23C';
     else color = '#C1502E';
     ctx.fillStyle = color;
@@ -982,11 +1137,10 @@ function renderEntropyMap(buf){
   });
   const overall = shannonEntropy(buf);
   document.getElementById('entropyNote').innerHTML =
-    `Overall entropy: <b style="color:var(--bone);">${overall.toFixed(2)} / 8.0 bits/byte</b> — ` +
-    (overall > 7.5 ? 'high; consistent with compressed, encrypted, or packed data.' :
-     overall > 6.0 ? 'moderate; mixed content.' :
-     'low; consistent with plain text or structured/sparse data.') +
-    ` Bar color: <span style="color:#2C7A6F;">teal = low</span>, <span style="color:#E3A23C;">amber = moderate</span>, <span style="color:#C1502E;">rust = high (possible packing)</span>, read left→right across the file.`;
+    `Overall: <b style="color:var(--bone);">${overall.toFixed(2)} / 8.0 bits/byte</b> — ` +
+    (overall > 7.5 ? '<span style="color:var(--rust);">high (packed/compressed)</span>' :
+     overall > 6.0 ? '<span style="color:var(--amber);">moderate</span>' :
+     '<span style="color:var(--teal);">low (plain/structured)</span>');
 }
 
 function parsePESections(buf){
@@ -1029,8 +1183,8 @@ function renderPESections(buf){
   area.innerHTML = `
     <div class="zip-list">${rows}</div>
     <div class="preset-note">
-      ${pe.sections.length} section(s) parsed from the PE header.
-      ${pe.overlay > 0 ? `<br><span style="color:var(--amber);">⚠ ${fmtBytes(pe.overlay)} of overlay data</span> found after the last declared section — extra bytes appended past the file's official end, a common place to hide a second-stage payload. Not inherently malicious (also used for legitimate signing/resources), just worth noting.` : 'No overlay data detected — file ends where the last section says it should.'}
+      ${pe.sections.length} section(s).
+      ${pe.overlay > 0 ? `<span style="color:var(--amber);">⚠ ${fmtBytes(pe.overlay)} overlay data</span> after last section.` : 'No overlay data.'}
     </div>`;
 }
 
@@ -1071,6 +1225,239 @@ function renderStructure(){
   renderExtensionCheck(currentBuffer, currentName);
 }
 
+/* ---------- 06: integrity & versions ---------- */
+
+/* CRC32 (standard poly 0xEDB88320) for zip entry checksum verification */
+const CRC32_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for(let n=0;n<256;n++){
+    let c = n;
+    for(let k=0;k<8;k++){ c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); }
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+function crc32(buf){
+  let crc = 0xFFFFFFFF;
+  for(let i=0;i<buf.length;i++){ crc = CRC32_TABLE[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8); }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+const VERSION_PATTERNS = {
+  version: /\bv?\d+\.\d+\.\d+(?:\.\d+)?\b/g,
+  copyright: /Copyright\s*(?:\(c\)|©)?\s*\d{4}(?:\s*[-–]\s*\d{4})?[^\r\n]{0,40}/gi,
+  build: /\bBuild[\s:]*\d{2,8}\b/gi,
+};
+function renderVersions(){
+  const body = document.getElementById('versionBody');
+  body.innerHTML = '';
+  if(!currentBuffer){ document.getElementById('versionNote').textContent = 'Load a file above.'; return; }
+  const strings = window._quickStrings || scanStrings(4, 'ascii');
+  const found = [];
+  const seen = new Set();
+  Object.entries(VERSION_PATTERNS).forEach(([kind, re]) => {
+    strings.forEach(([off, s]) => {
+      const localRe = new RegExp(re.source, re.flags);
+      let m;
+      while((m = localRe.exec(s))){
+        const key = kind + ':' + m[0];
+        if(!seen.has(key) && found.length < 300){ seen.add(key); found.push([off, kind, m[0]]); }
+      }
+    });
+  });
+  const frag = document.createDocumentFragment();
+  found.forEach(([off, kind, val]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="off-cell">${off.toString(16).padStart(8,'0')}</td><td class="asc-cell"><span style="color:var(--amber);">[${kind}]</span> ${escapeHtml(val)}</td>`;
+    frag.appendChild(tr);
+  });
+  body.appendChild(frag);
+  document.getElementById('versionNote').textContent = found.length
+    ? `${found.length} version/copyright/build string(s) found.`
+    : 'No version, copyright, or build strings found in this file.';
+  window._lastVersions = found;
+}
+
+function renderTruncationCheck(){
+  const el = document.getElementById('truncationResult');
+  if(!currentBuffer){ el.innerHTML = ''; return; }
+  const buf = currentBuffer;
+  const findings = [];
+
+  // PE: does the last section's declared end exceed the actual file length?
+  const pe = parsePESections(buf);
+  if(pe && pe.sections.length){
+    const declaredEnd = Math.max(...pe.sections.map(s => s.rawPtr + s.rawSize));
+    if(declaredEnd > buf.length){
+      findings.push(`⚠ PE header declares data extending to byte ${declaredEnd.toLocaleString()}, but the file is only ${buf.length.toLocaleString()} bytes — file appears truncated.`);
+    } else {
+      findings.push(`PE section table's declared end (${declaredEnd.toLocaleString()} bytes) fits within the actual file size — no truncation indicated.`);
+    }
+  }
+
+  // RIFF (WAV/AVI/WEBP): declared chunk size at offset 4, should equal filesize - 8
+  if(buf.length >= 8 && buf[0]===0x52 && buf[1]===0x49 && buf[2]===0x46 && buf[3]===0x46){
+    const declared = (buf[4]|(buf[5]<<8)|(buf[6]<<16)|(buf[7]<<24)) >>> 0;
+    const actual = buf.length - 8;
+    if(declared > actual){
+      findings.push(`⚠ RIFF header declares ${declared.toLocaleString()} bytes of data, but only ${actual.toLocaleString()} bytes follow — file appears truncated.`);
+    } else if(declared < actual){
+      findings.push(`RIFF header declares ${declared.toLocaleString()} bytes but ${actual.toLocaleString()} bytes follow — extra trailing data present (not truncated, but padded or has appended content).`);
+    } else {
+      findings.push(`RIFF declared size matches actual file size exactly — no truncation indicated.`);
+    }
+  }
+
+  if(!findings.length){
+    findings.push('No length-checkable structure detected for this file type (checks currently cover PE and RIFF-based formats).');
+  }
+  el.innerHTML = `<div style="max-width:640px;">${findings.map(f => `<div style="margin-bottom:8px; color:${f.startsWith('⚠')?'var(--rust)':'var(--bone-dim)'};">${escapeHtml(f)}</div>`).join('')}</div>`;
+}
+
+async function renderZipIntegrity(){
+  const area = document.getElementById('zipIntegrityArea');
+  if(!zip){
+    area.innerHTML = `<div class="empty" style="font-size:13px; color:var(--bone-dim); font-family:var(--sans);">No zip archive loaded — this check applies to the currently selected zip entry.</div>`;
+    return;
+  }
+  const entry = zip.files[currentName];
+  if(!entry || entry.dir || !currentBuffer){
+    area.innerHTML = `<div class="empty" style="font-size:13px; color:var(--bone-dim); font-family:var(--sans);">Select a file inside the zip to verify its checksum.</div>`;
+    return;
+  }
+  const declaredCrc = entry._data && typeof entry._data.crc32 === 'number' ? (entry._data.crc32 >>> 0) : null;
+  const actualCrc = crc32(currentBuffer);
+  const declaredHex = declaredCrc !== null ? declaredCrc.toString(16).padStart(8,'0') : 'unavailable';
+  const actualHex = actualCrc.toString(16).padStart(8,'0');
+  const match = declaredCrc !== null && declaredCrc === actualCrc;
+  area.innerHTML = `<div class="filemeta" style="margin-bottom:0;">
+      <div><b>Entry</b><br>${escapeHtml(currentName)}</div>
+      <div><b>Declared CRC32</b><br>${declaredHex}</div>
+      <div><b>Recomputed CRC32</b><br>${actualHex}</div>
+      <div><b>Result</b><br><span style="color:${declaredCrc===null?'var(--bone-dim)':match?'var(--teal)':'var(--rust)'};">${declaredCrc===null?'No stored CRC32 to compare':match?'✓ Match — entry is intact':'⚠ Mismatch — entry may be corrupted'}</span></div>
+    </div>`;
+}
+
+function renderGzipHeader(){
+  const el = document.getElementById('gzipResult');
+  const buf = currentBuffer;
+  if(!buf || buf.length < 10 || buf[0] !== 0x1F || buf[1] !== 0x8B){
+    el.innerHTML = `<div class="empty" style="font-size:13px; color:var(--bone-dim); font-family:var(--sans);">Not a GZIP file — no header to parse.</div>`;
+    return;
+  }
+  const flags = buf[3];
+  const mtimeRaw = (buf[4]|(buf[5]<<8)|(buf[6]<<16)|(buf[7]<<24)) >>> 0;
+  const mtime = mtimeRaw ? new Date(mtimeRaw * 1000) : null;
+  let pos = 10;
+  if(flags & 0x04){ const xlen = buf[pos] | (buf[pos+1]<<8); pos += 2 + xlen; } // FEXTRA
+  let filename = null;
+  if(flags & 0x08){ // FNAME
+    let s = '';
+    while(pos < buf.length && buf[pos] !== 0){ s += String.fromCharCode(buf[pos]); pos++; }
+    filename = s;
+  }
+  el.innerHTML = `<div>
+      <div><b>Original filename</b><br>${filename ? escapeHtml(filename) : '(not stored in header)'}</div>
+      <div><b>Modification time</b><br>${mtime ? mtime.toUTCString() : '(not set / 0)'}</div>
+      <div><b>Compression method</b><br>${buf[2] === 8 ? 'deflate' : 'method ' + buf[2]}</div>
+    </div>`;
+}
+
+function renderTimestampCrossCheck(){
+  const el = document.getElementById('tsCrossResult');
+  const p = window._lastProfile || {};
+  const years = new Set();
+  if(p.peTs) years.add(p.peTs.getUTCFullYear());
+  if(p.zipDates && p.zipDates.length){
+    p.zipDates.forEach(d => years.add(new Date(d).getUTCFullYear()));
+  }
+  (p.dates||[]).forEach(d => { const m = d.match(/(19|20)\d{2}/); if(m) years.add(Number(m[0])); });
+
+  if(years.size === 0){
+    el.innerHTML = `<div class="empty" style="font-size:13px; color:var(--bone-dim); font-family:var(--sans);">No embedded timestamps found to cross-check.</div>`;
+    return;
+  }
+  const arr = Array.from(years).sort((a,b)=>a-b);
+  const spread = arr[arr.length-1] - arr[0];
+  el.innerHTML = `<div style="max-width:640px;">
+      <div style="margin-bottom:8px;"><b>Years found across all embedded timestamps:</b> ${arr.join(', ')}</div>
+      <div style="color:${spread > 1 ? 'var(--amber)' : 'var(--bone-dim)'};">
+        ${spread > 1
+          ? `⚠ Spans ${spread} years — this can mean the file was repackaged, edited, or reassembled after its original creation. Not inherently suspicious (e.g. an old asset added to a newer archive), but worth a second look if provenance matters.`
+          : 'All timestamps are consistent (same year or none found beyond one) — no cross-reference discrepancy.'}
+      </div>
+    </div>`;
+}
+
+function renderIntegrity(){
+  if(!currentBuffer) return;
+  renderVersions();
+  renderTruncationCheck();
+  renderZipIntegrity();
+  renderGzipHeader();
+  renderTimestampCrossCheck();
+}
+
+async function sha256Hex(input){
+  const buf = typeof input === 'string' ? new TextEncoder().encode(input) : await input.arrayBuffer();
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function canvasToBlob(canvas){
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+async function exportZipBundle(){
+  if(!currentBuffer) return;
+  const btn = document.getElementById('exportZipBtn');
+  const statusEl = document.getElementById('exportStatus');
+  const origLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Building…';
+  try{
+    const outZip = new JSZip();
+    const reportText = buildReportText();
+    const histBlob = await canvasToBlob(document.getElementById('histCanvas'));
+    const entBlob = await canvasToBlob(document.getElementById('entropyCanvas'));
+
+    outZip.file('report.txt', reportText);
+    if(histBlob) outZip.file('histogram.png', histBlob);
+    if(entBlob) outZip.file('entropy-map.png', entBlob);
+
+    const [reportHash, histHash, entHash] = await Promise.all([
+      sha256Hex(reportText),
+      histBlob ? sha256Hex(histBlob) : Promise.resolve(null),
+      entBlob ? sha256Hex(entBlob) : Promise.resolve(null),
+    ]);
+
+    const checksumLines = [
+      'SHA-256 checksums — Tooth Puller export',
+      `Source file: ${currentName}`,
+      `Generated: ${new Date().toISOString()}`,
+      '',
+      `${reportHash}  report.txt`,
+    ];
+    if(histHash) checksumLines.push(`${histHash}  histogram.png`);
+    if(entHash) checksumLines.push(`${entHash}  entropy-map.png`);
+    outZip.file('checksums.txt', checksumLines.join('\n') + '\n');
+
+    const blob = await outZip.generateAsync({type:'blob'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeName = (currentName || 'file').replace(/[^a-z0-9._-]/gi, '_');
+    a.href = url;
+    a.download = `tooth-puller-export_${safeName}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    statusEl.textContent = 'Exported ✓';
+    setTimeout(()=>{ statusEl.textContent = 'Report + graphs + SHA-256 checksums'; }, 2200);
+  } catch(e){
+    statusEl.textContent = 'Export failed — try the text report instead.';
+  } finally {
+    btn.disabled = false; btn.textContent = origLabel;
+  }
+}
+document.getElementById('exportZipBtn').addEventListener('click', exportZipBundle);
 document.getElementById('downloadReportBtn').addEventListener('click', downloadReport);
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1117,7 +1504,10 @@ function renderZipListing(){
     } else if(!f.dir){
       const row = document.createElement('div');
       row.className = 'zip-row';
-      row.innerHTML = `<span class="zpath">📄 ${escapeHtml(rel)}</span><span class="zsize">${fmtBytes(f._data ? f._data.uncompressedSize : 0)}</span>`;
+      const compMethod = f._data && f._data.compressedSize !== undefined
+        ? (f._data.compressedSize < f._data.uncompressedSize ? 'deflate' : 'stored')
+        : '';
+      row.innerHTML = `<span class="zpath">📄 ${escapeHtml(rel)}</span><span class="zsize">${compMethod ? compMethod + ' · ' : ''}${fmtBytes(f._data ? f._data.uncompressedSize : 0)}</span>`;
       row.addEventListener('click', () => selectZipEntry(f.name));
       listEl.appendChild(row);
     }

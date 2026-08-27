@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tooth Puller — Binary Extraction Lab</title>
+<meta name="description" content="Drop in a zip or binary file and extract its bytes in your browser. No uploads, no server — everything stays local.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Special+Elite&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0D10;
+    --panel:#12171B;
+    --panel-2:#171D22;
+    --line:#232B31;
+    --bone:#E9E3D3;
+    --bone-dim:#A9A290;
+    --teal:#4CD6C0;
+    --teal-dim:#2C7A6F;
+    --amber:#E3A23C;
+    --rust:#C1502E;
+    --mono:'IBM Plex Mono', monospace;
+    --chart:'Special Elite', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:34px 34px;
+    background-attachment:fixed;
+    color:var(--bone);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  #progress{position:fixed;top:0;left:0;height:2px;background:var(--teal);width:0%;z-index:999;transition:width .1s linear;box-shadow:0 0 8px var(--teal);}
+
+  a{color:var(--teal);}
+
+  /* ---------- Nav ---------- */
+  nav.top-nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(10,13,16,.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:14px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  nav.top-nav .brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--chart); letter-spacing:.5px; font-size:15px; color:var(--bone);
+  }
+  nav.top-nav .brand svg{width:22px;height:22px;flex-shrink:0;}
+  nav.top-nav .links{display:flex; gap:22px; font-size:13px; font-family:var(--mono);}
+  nav.top-nav .links a{color:var(--bone-dim); text-decoration:none;}
+  nav.top-nav .links a:hover{color:var(--teal);}
+
+  /* ---------- Hero ---------- */
+  header.hero{padding:64px 28px 40px; max-width:920px; margin:0 auto; text-align:left;}
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:2.5px; text-transform:uppercase;
+    color:var(--teal); margin-bottom:18px; display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:''; width:22px; height:1px; background:var(--teal);}
+  h1{
+    font-family:var(--chart); font-weight:400; font-size:clamp(34px,5.4vw,58px);
+    line-height:1.08; margin:0 0 20px; color:var(--bone);
+  }
+  h1 em{font-style:normal; color:var(--teal);}
+  .lede{font-size:16.5px; line-height:1.7; color:var(--bone-dim); max-width:640px; margin:0 0 6px;}
+  .lede strong{color:var(--bone);}
+
+  /* ---------- Dropzone (signature element) ---------- */
+  .lab{max-width:920px; margin:0 auto; padding:0 28px 90px;}
+  .dropzone{
+    position:relative;
+    border:1px dashed var(--teal-dim);
+    background:var(--panel);
+    border-radius:6px;
+    padding:52px 30px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .2s, background .2s;
+    overflow:hidden;
+  }
+  .dropzone::before{
+    content:''; position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 38px, rgba(76,214,192,.05) 38px 39px);
+    pointer-events:none;
+  }
+  .dropzone.drag{border-color:var(--teal); background:#132420;}
+  .dropzone.drag .forceps{transform:rotate(-18deg) translateY(-4px);}
+  .forceps{width:54px; height:54px; margin:0 auto 18px; transition:transform .25s;}
+  .dz-title{font-family:var(--mono); font-weight:600; font-size:15px; color:var(--bone); margin-bottom:6px;}
+  .dz-sub{font-size:13px; color:var(--bone-dim); font-family:var(--mono);}
+  .dz-sub .accent{color:var(--teal);}
+  input#fileInput{display:none;}
+
+  .local-note{
+    margin-top:14px; font-size:12.5px; color:var(--bone-dim); font-family:var(--mono);
+    display:flex; align-items:center; gap:8px;
+  }
+  .local-note svg{width:14px;height:14px;flex-shrink:0;color:var(--teal);}
+
+  /* ---------- Section index ---------- */
+  .toc{
+    position:static;
+    display:flex; flex-wrap:wrap; gap:10px 22px;
+    margin:34px 0 0; padding:16px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    font-family:var(--mono); font-size:12.5px;
+  }
+  .toc a{color:var(--bone-dim); text-decoration:none;}
+  .toc a:hover{color:var(--teal);}
+  .toc span.n{color:var(--teal); margin-right:6px;}
+
+  /* ---------- Workspace panels ---------- */
+  section.panel{margin-top:40px; display:none;}
+  section.panel.active{display:block;}
+  .panel h2{
+    font-family:var(--chart); font-size:22px; font-weight:400; color:var(--bone);
+    margin:0 0 4px; display:flex; align-items:center; gap:10px;
+  }
+  .panel .sub{font-size:13px; color:var(--bone-dim); margin-bottom:18px; font-family:var(--mono);}
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:22px;}
+  .filemeta{display:flex; flex-wrap:wrap; gap:24px; font-family:var(--mono); font-size:12.5px; color:var(--bone-dim); margin-bottom:18px;}
+  .filemeta b{color:var(--bone); font-weight:600;}
+
+  /* zip list */
+  .zip-list{border:1px solid var(--line); border-radius:4px; overflow:hidden;}
+  .zip-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px; border-bottom:1px solid var(--line);
+    font-family:var(--mono); font-size:13px; cursor:pointer;
+  }
+  .zip-row:last-child{border-bottom:none;}
+  .zip-row:hover{background:var(--panel-2); color:var(--teal);}
+  .zip-row .zpath{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .zip-row .zsize{color:var(--bone-dim); flex-shrink:0; margin-left:14px;}
+  .zip-row.dir{color:var(--amber); cursor:default;}
+  .zip-row.dir:hover{background:none; color:var(--amber);}
+  .breadcrumbs{font-family:var(--mono); font-size:12px; color:var(--bone-dim); margin-bottom:10px;}
+  .breadcrumbs a{color:var(--teal); text-decoration:none;}
+
+  /* tabs */
+  .tabs{display:flex; gap:2px; margin-bottom:16px; border-bottom:1px solid var(--line);}
+  .tab-btn{
+    font-family:var(--mono); font-size:12.5px; background:none; border:none; color:var(--bone-dim);
+    padding:10px 16px; cursor:pointer; border-bottom:2px solid transparent;
+  }
+  .tab-btn.active{color:var(--teal); border-bottom-color:var(--teal);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  /* hex viewer */
+  .hexwrap{border:1px solid var(--line); border-radius:4px; background:#0D1114; overflow:auto; max-height:520px;}
+  table.hexgrid{border-collapse:collapse; width:100%; font-family:var(--mono); font-size:12px;}
+  table.hexgrid th{
+    position:sticky; top:0; background:#171D22; color:var(--bone-dim); text-align:left;
+    padding:8px 10px; border-bottom:1px solid var(--line); font-weight:500;
+  }
+  table.hexgrid td{padding:3px 10px; white-space:nowrap; color:var(--bone-dim); vertical-align:top;}
+  table.hexgrid tr:hover td{background:#151B20;}
+  .off-cell{color:var(--teal); opacity:.75;}
+  .hex-cell{letter-spacing:1.5px; color:var(--bone);}
+  .hex-cell b{color:var(--amber); font-weight:600;}
+  .asc-cell{color:var(--bone-dim);}
+  .hexload-more{padding:10px; text-align:center;}
+  .btn{
+    font-family:var(--mono); font-size:12.5px; background:var(--panel-2); color:var(--teal);
+    border:1px solid var(--teal-dim); padding:8px 16px; border-radius:4px; cursor:pointer;
+  }
+  .btn:hover{background:#183028;}
+  .btn.small{padding:5px 10px; font-size:11.5px;}
+  .btn.danger{color:var(--rust); border-color:#5a2c1f;}
+  .btn.primary{background:var(--teal); color:#08211d; border-color:var(--teal); font-weight:600;}
+  .btn.primary:hover{background:#63e6d1;}
+
+  /* extraction chart */
+  .chart-row{
+    display:grid; grid-template-columns:28px 1.3fr 1fr .8fr 1.6fr 32px;
+    gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line);
+    font-family:var(--mono); font-size:12.5px;
+  }
+  .chart-row.head{color:var(--bone-dim); font-size:11px; text-transform:uppercase; letter-spacing:.5px;}
+  .chart-row input, .chart-row select{
+    background:#0D1114; border:1px solid var(--line); color:var(--bone); font-family:var(--mono);
+    font-size:12.5px; padding:6px 8px; border-radius:3px; width:100%;
+  }
+  .chart-row .tooth-n{color:var(--amber); text-align:center;}
+  .chart-row .val{color:var(--teal); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .chart-row .rm{background:none; border:none; color:var(--bone-dim); cursor:pointer; font-size:15px;}
+  .chart-row .rm:hover{color:var(--rust);}
+  .chart-controls{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;}
+
+  .preset-note{font-size:12px; color:var(--bone-dim); font-family:var(--mono); margin-top:14px; line-height:1.6;}
+
+  /* profile grid */
+  .profile-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  @media (max-width:760px){ .profile-grid{grid-template-columns:1fr 1fr;} }
+  @media (max-width:480px){ .profile-grid{grid-template-columns:1fr;} }
+  .p-card{background:#0D1114; border:1px solid var(--line); border-radius:5px; padding:14px 16px;}
+  .p-card .p-head{
+    font-family:var(--chart); font-size:15px; color:var(--teal); margin-bottom:8px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .p-card .p-tag{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.5px; padding:2px 6px; border-radius:3px;}
+  .p-tag.found{background:#183028; color:var(--teal);}
+  .p-tag.none{background:#1a1614; color:var(--bone-dim);}
+  .p-card ul{margin:0; padding-left:16px; font-size:12px; font-family:var(--mono); color:var(--bone-dim); line-height:1.7;}
+  .p-card ul li b{color:var(--bone); font-weight:600;}
+  .p-card .empty{font-size:12px; color:var(--bone-dim); font-style:italic; font-family:var(--sans);}
+  .profile-disclaimer{grid-column:1/-1; font-size:11.5px; color:var(--bone-dim); font-family:var(--mono); border-top:1px solid var(--line); padding-top:12px; margin-top:2px;}
+
+  footer.site-footer{
+    max-width:920px; margin:0 auto; padding:40px 28px 70px; border-top:1px solid var(--line);
+    font-family:var(--mono); font-size:12px; color:var(--bone-dim); text-align:center;
+  }
+
+  /* cookie banner */
+  #cookieBanner{
+    position:fixed; bottom:0; left:0; right:0; z-index:200;
+    background:#0D1114; border-top:1px solid var(--line); padding:14px 20px;
+    display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:12.5px; color:var(--bone-dim);
+  }
+  #cookieBanner button{
+    background:var(--teal); color:#08211d; border:none; padding:7px 18px; border-radius:4px;
+    font-family:var(--mono); font-weight:600; cursor:pointer; font-size:12px;
+  }
+
+  @media (max-width:640px){
+    .chart-row{grid-template-columns:22px 1fr 1fr 34px; }
+    .chart-row > :nth-child(4), .chart-row > :nth-child(5){grid-column:span 2;}
+    .chart-row.head > :nth-child(4){display:none;}
+  }
+  :focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav class="top-nav">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2c-3 0-5 2-5 5 0 2 .5 3 .5 5 0 3 1 8 2 9 .8.8 1.5-1 1.5-3.5 0-1 .5-1.5 1-1.5s1 .5 1 1.5c0 2.5.7 4.3 1.5 3.5 1-1 2-6 2-9 0-2 .5-3 .5-5 0-3-2-5-5-5z"/></svg>
+    Tooth Puller
+  </div>
+  <div class="links">
+    <a href="#lab">Lab</a>
+    <a href="https://github.com/SauerNinja/Tooth-Puller" target="_blank" rel="noopener">Source</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">Binary Extraction Lab</div>
+  <h1>Pull the bytes<br>straight <em>out</em> of the file.</h1>
+  <p class="lede">
+    A browser-based extraction chart for binary files and zip archives, built on the original
+    <strong>Tooth Puller / binary-extractor</strong> reader used for Creatures&nbsp;2 history files.
+    Drop a file below and read it byte-by-byte — nothing is uploaded anywhere.
+  </p>
+  <div class="local-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    Runs entirely in this tab. Files are read locally and never leave your device.
+  </div>
+</header>
+
+<main class="lab" id="lab">
+
+  <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload a file to extract">
+    <svg class="forceps" viewBox="0 0 24 24" fill="none" stroke="#4CD6C0" stroke-width="1.4">
+      <path d="M8 2c2 3 2 6 0 9M16 2c-2 3-2 6 0 9M8 11c0 4 1.2 7 1.2 9.5 0 1 .5 1.5 1 1.5M16 11c0 4-1.2 7-1.2 9.5 0 1-.5 1.5-1 1.5"/>
+      <path d="M8 2 6.5 3.3M16 2l1.5 1.3"/>
+    </svg>
+    <div class="dz-title">Drop a .zip or any binary file here</div>
+    <div class="dz-sub">or <span class="accent">click to browse</span> — any file type accepted</div>
+    <input type="file" id="fileInput">
+  </div>
+
+  <nav class="toc" id="tocNav" style="display:none;">
+    <a href="#sec-profile"><span class="n">00</span>Profile</a>
+    <a href="#sec-source"><span class="n">01</span>Source</a>
+    <a href="#sec-hex"><span class="n">02</span>Hex viewer</a>
+    <a href="#sec-chart"><span class="n">03</span>Extraction chart</a>
+    <a href="#sec-forensics"><span class="n">04</span>Strings &amp; signatures</a>
+    <a href="#sec-structure"><span class="n">05</span>Structure</a>
+  </nav>
+
+  <!-- PROFILE ESTIMATE -->
+  <section class="panel" id="sec-profile">
+    <h2>00 — Profile estimate</h2>
+    <div class="sub">A first-pass read of the file, before the details — inferred from embedded strings, timestamps and signature only. Heuristic, not verified fact.</div>
+    <div class="card">
+      <div class="profile-grid" id="profileGrid"></div>
+      <div class="chart-controls" style="margin-top:18px;">
+        <button class="btn primary" id="downloadReportBtn">⬇ Download full report (.txt)</button>
+        <span style="font-family:var(--mono); font-size:11.5px; color:var(--bone-dim); align-self:center;">Includes profile, hash, structure/entropy, chart fields, strings, and a link back to the repo.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOURCE / ZIP BROWSER -->
+  <section class="panel" id="sec-source">
+    <h2>01 — Source</h2>
+    <div class="sub" id="sourceSub">Nothing loaded yet.</div>
+    <div class="card">
+      <div class="filemeta" id="fileMeta"></div>
+      <div id="zipArea" style="display:none;">
+        <div class="breadcrumbs" id="zipCrumbs"></div>
+        <div class="zip-list" id="zipList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HEX VIEWER -->
+  <section class="panel" id="sec-hex">
+    <h2>02 — Hex viewer</h2>
+    <div class="sub">Raw bytes of the currently selected file, offset + hex + ASCII.</div>
+    <div class="card">
+      <div class="hexwrap">
+        <table class="hexgrid" id="hexTable">
+          <thead><tr><th style="width:90px;">Offset</th><th>Hex</th><th style="width:200px;">ASCII</th></tr></thead>
+          <tbody id="hexBody"></tbody>
+        </table>
+      </div>
+      <div class="hexload-more" id="hexLoadMoreWrap" style="display:none;">
+        <button class="btn small" id="hexLoadMore">Load next 4096 bytes ↓</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXTRACTION CHART -->
+  <section class="panel" id="sec-chart">
+    <h2>03 — Extraction chart</h2>
+    <div class="sub">Define fields to read sequentially from the buffer — like a dental chart, one tooth (field) at a time. Matches the original Tooth Puller reader methods.</div>
+    <div class="card">
+      <div class="chart-row head">
+        <div>#</div><div>Field name</div><div>Type</div><div>Len</div><div>Value</div><div></div>
+      </div>
+      <div id="chartRows"></div>
+      <div class="chart-controls">
+        <button class="btn small" id="addRow">+ Add field</button>
+        <button class="btn small" id="loadPreset">Load Creatures 2 preset</button>
+        <button class="btn small danger" id="resetChart">Reset</button>
+        <button class="btn small primary" id="copyJson" style="margin-left:auto;">Copy result as JSON</button>
+      </div>
+      <div class="preset-note">
+        Types mirror the original library: <b>Byte</b> (1B), <b>Word</b> (2B, uint16 LE), <b>Long</b> (4B, uint32 LE),
+        <b>Bytes</b> (raw, N bytes → hex), <b>LString</b> (length-prefixed string, Creatures-style).
+        Fields read in order, each consuming from where the last left off.
+      </div>
+    </div>
+  </section>
+
+  <!-- FORENSICS: STRINGS + SIGNATURE -->
+  <section class="panel" id="sec-forensics">
+    <h2>04 — Strings &amp; signatures</h2>
+    <div class="sub">Passive, read-only analysis — the same thing tools like <code>file</code>, <code>exiftool</code> and <code>strings</code> do.</div>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-sig">File signature</button>
+        <button class="tab-btn" data-tab="tab-strings">Extracted strings</button>
+        <button class="tab-btn" data-tab="tab-hash">Hash digest</button>
+      </div>
+
+      <div class="tab-content active" id="tab-sig">
+        <div id="sigResult" class="filemeta" style="margin-bottom:0;"></div>
+      </div>
+
+      <div class="tab-content" id="tab-strings">
+        <div class="chart-controls" style="margin-top:0; margin-bottom:14px;">
+          <label style="font-family:var(--mono); font-size:12.5px; color:var(--bone-dim); display:flex; align-items:center; gap:8px;">
+            Min length
+            <input type="number" id="strMinLen" value="4" min="2" max="64" style="width:60px; background:#0D1114; border:1px solid var(--line); color:var(--bone); font-family:var(--mono); padding:5px 8px; border-radius:3px;">
+          </label>
+          <select id="strEncoding" style="background:#0D1114; border:1px solid var(--line); color:var(--bone); font-family:var(--mono); font-size:12.5px; padding:6px 8px; border-radius:3px;">
+            <option value="ascii">ASCII</option>
+            <option value="utf16le">UTF-16LE</option>
+          </select>
+          <button class="btn small" id="runStrings">Scan</button>
+          <button class="btn small primary" id="copyStrings" style="margin-left:auto;">Copy all</button>
+        </div>
+        <div class="hexwrap" style="max-height:420px;">
+          <table class="hexgrid" id="strTable">
+            <thead><tr><th style="width:90px;">Offset</th><th>String</th></tr></thead>
+            <tbody id="strBody"></tbody>
+          </table>
+        </div>
+        <div class="preset-note" id="strCount"></div>
+      </div>
+
+      <div class="tab-content" id="tab-hash">
+        <div class="filemeta" id="hashResult" style="margin-bottom:0;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STRUCTURE: HISTOGRAM, ENTROPY, PE SECTIONS, EXT CHECK -->
+  <section class="panel" id="sec-structure">
+    <h2>05 — Structure</h2>
+    <div class="sub">Visual byte distribution, entropy, and (for Windows PE files) an internal section table — the closest thing here to an actual x-ray.</div>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-histogram">Byte histogram</button>
+        <button class="tab-btn" data-tab="tab-entropy">Entropy map</button>
+        <button class="tab-btn" data-tab="tab-pesections">PE sections</button>
+        <button class="tab-btn" data-tab="tab-extcheck">Extension check</button>
+      </div>
+
+      <div class="tab-content active" id="tab-histogram">
+        <canvas id="histCanvas" width="900" height="220" style="width:100%; height:220px; display:block; background:#0D1114; border:1px solid var(--line); border-radius:4px;"></canvas>
+        <div class="preset-note" id="histNote">256 buckets (byte values 0–255), height = frequency. Text files cluster in the printable-ASCII range (32–126); compressed/encrypted data spreads evenly.</div>
+      </div>
+
+      <div class="tab-content" id="tab-entropy">
+        <canvas id="entropyCanvas" width="900" height="70" style="width:100%; height:70px; display:block; background:#0D1114; border:1px solid var(--line); border-radius:4px;"></canvas>
+        <div class="preset-note" id="entropyNote"></div>
+      </div>
+
+      <div class="tab-content" id="tab-pesections">
+        <div id="peSectionArea"></div>
+      </div>
+
+      <div class="tab-content" id="tab-extcheck">
+        <div class="filemeta" id="extCheckResult" style="margin-bottom:0;"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  Extraction logic based on thoughts by Setvin Noether (@SauerNinja) · adapted from the
+  <a href="https://github.com/SauerNinja/Tooth-Puller" target="_blank" rel="noopener">Tooth-Puller</a> binary-extractor.
+  MIT licensed. All parsing happens client-side.
+</footer>
+
+<div id="cookieBanner">
+  <span>This site uses analytics cookies to understand readership.</span>
+  <button id="cookieOk">OK</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+/* ---------- progress bar ---------- */
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+});
+
+/* ---------- cookie banner ---------- */
+(function(){
+  const b = document.getElementById('cookieBanner');
+  if(localStorage.getItem('tp_cookie_ok')){ b.style.display='none'; }
+  document.getElementById('cookieOk').addEventListener('click', () => {
+    localStorage.setItem('tp_cookie_ok','1');
+    b.style.display='none';
+  });
+})();
+
+/* ================= STATE ================= */
+let currentBuffer = null;   // Uint8Array of the currently selected sub-file (for hex + chart)
+let currentName = '';
+let zip = null;             // JSZip instance if a zip was loaded
+let zipPath = '';           // current folder path inside zip
+let hexOffset = 0;
+const HEX_CHUNK = 4096;
+
+/* ================= BINARY EXTRACTOR (ported from lib/binary_extractor.js) ================= */
+class BinaryExtractor {
+  constructor(buffer){ this.buffer = buffer; this.index = 0; }
+  setBuffer(buffer){ this.buffer = buffer; this.index = 0; }
+  skip(n){ this.index += n; }
+  readByte(){ const v = this.buffer[this.index]; this.index += 1; return v; }
+  readWord(){ const v = this.buffer[this.index] | (this.buffer[this.index+1] << 8); this.index += 2; return v >>> 0; }
+  readLong(){
+    const b = this.buffer;
+    const i = this.index;
+    const v = (b[i] | (b[i+1]<<8) | (b[i+2]<<16) | (b[i+3]<<24)) >>> 0;
+    this.index += 4;
+    return v;
+  }
+  readBytes(size){
+    const end = this.index + size;
+    const slice = this.buffer.slice(this.index, end);
+    this.index = end;
+    return slice;
+  }
+  readLString(){
+    let length = this.buffer[this.index];
+    this.index += 1;
+    if(length === 0xFF){ length = this.readWord(); }
+    const end = this.index + length;
+    const slice = this.buffer.slice(this.index, end);
+    this.index = end;
+    let s = '';
+    for(let k=0;k<slice.length;k++){ s += String.fromCharCode(slice[k]); }
+    return s;
+  }
+}
+function bytesToHex(u8){ return Array.from(u8).map(b=>b.toString(16).padStart(2,'0')).join(' '); }
+
+/* ================= FILE LOADING ================= */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => {
+  e.preventDefault(); dropzone.classList.add('drag');
+}));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+}));
+dropzone.addEventListener('drop', e => {
+  const f = e.dataTransfer.files[0];
+  if(f) handleFile(f);
+});
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('keydown', e => { if(e.key==='Enter' || e.key===' ') fileInput.click(); });
+fileInput.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+async function handleFile(file){
+  currentName = file.name;
+  document.getElementById('tocNav').style.display = 'flex';
+  document.querySelectorAll('section.panel').forEach(s => s.classList.add('active'));
+
+  const isZip = /\.zip$/i.test(file.name);
+  const meta = document.getElementById('fileMeta');
+  meta.innerHTML = `<div><b>Name</b><br>${escapeHtml(file.name)}</div>
+                     <div><b>Size</b><br>${fmtBytes(file.size)}</div>
+                     <div><b>Type</b><br>${isZip ? 'ZIP archive' : (file.type || 'application/octet-stream')}</div>`;
+
+  if(isZip){
+    document.getElementById('sourceSub').textContent = 'Zip archive — browse entries below, click one to inspect its bytes.';
+    const buf = await file.arrayBuffer();
+    zip = await JSZip.loadAsync(buf);
+    zipPath = '';
+    document.getElementById('zipArea').style.display = 'block';
+    renderZipListing();
+    // auto-select first non-dir file for convenience
+    const firstFile = Object.values(zip.files).find(f => !f.dir);
+    if(firstFile) await selectZipEntry(firstFile.name);
+  } else {
+    document.getElementById('sourceSub').textContent = 'Single binary file loaded directly below.';
+    document.getElementById('zipArea').style.display = 'none';
+    zip = null;
+    const buf = await file.arrayBuffer();
+    setCurrentBuffer(new Uint8Array(buf), file.name);
+  }
+}
+
+function setCurrentBuffer(u8, name){
+  currentBuffer = u8;
+  currentName = name;
+  hexOffset = 0;
+  document.getElementById('hexBody').innerHTML = '';
+  renderHexChunk();
+  buildChart([]); // reset chart values, keep field defs
+  renderSignature();
+  buildProfile();
+  renderStructure();
+  document.getElementById('strBody').innerHTML = '';
+  document.getElementById('strCount').textContent = '';
+  renderHash();
+}
+
+/* ---------- 04a: file signature detection ---------- */
+const SIGNATURES = [
+  {hex:[0x89,0x50,0x4E,0x47], name:'PNG image'},
+  {hex:[0xFF,0xD8,0xFF], name:'JPEG image'},
+  {hex:[0x47,0x49,0x46,0x38], name:'GIF image (GIF87a/89a)'},
+  {hex:[0x25,0x50,0x44,0x46], name:'PDF document'},
+  {hex:[0x50,0x4B,0x03,0x04], name:'ZIP archive (or docx/xlsx/pptx/jar/apk)'},
+  {hex:[0x50,0x4B,0x05,0x06], name:'ZIP archive (empty)'},
+  {hex:[0x4D,0x5A], name:'Windows PE executable (.exe/.dll)'},
+  {hex:[0x7F,0x45,0x4C,0x46], name:'ELF executable (Linux)'},
+  {hex:[0xCA,0xFE,0xBA,0xBE], name:'Mach-O binary (universal) or Java class'},
+  {hex:[0xFE,0xED,0xFA,0xCE], name:'Mach-O binary (32-bit)'},
+  {hex:[0xFE,0xED,0xFA,0xCF], name:'Mach-O binary (64-bit)'},
+  {hex:[0x1F,0x8B], name:'GZIP archive'},
+  {hex:[0x42,0x5A,0x68], name:'BZIP2 archive'},
+  {hex:[0x37,0x7A,0xBC,0xAF,0x27,0x1C], name:'7-Zip archive'},
+  {hex:[0x52,0x61,0x72,0x21,0x1A,0x07], name:'RAR archive'},
+  {hex:[0x42,0x4D], name:'BMP image'},
+  {hex:[0x00,0x00,0x01,0x00], name:'ICO icon'},
+  {hex:[0x52,0x49,0x46,0x46], name:'RIFF container (WAV/AVI/WEBP)'},
+  {hex:[0x49,0x44,0x33], name:'MP3 audio (ID3 tag)'},
+  {hex:[0x4F,0x67,0x67,0x53], name:'OGG container'},
+  {hex:[0x66,0x4C,0x61,0x43], name:'FLAC audio'},
+  {hex:[0x75,0x73,0x74,0x61,0x72], name:'TAR archive', offset:257},
+  {hex:[0x00,0x61,0x73,0x6D], name:'WebAssembly module'},
+  {hex:[0x3C,0x3F,0x78,0x6D,0x6C], name:'XML document'},
+  {hex:[0x53,0x51,0x4C,0x69,0x74,0x65], name:'SQLite database'},
+];
+function matchAt(buf, sig, offset){
+  const o = offset || 0;
+  if(buf.length < o + sig.length) return false;
+  for(let i=0;i<sig.length;i++){ if(buf[o+i] !== sig[i]) return false; }
+  return true;
+}
+function renderSignature(){
+  if(!currentBuffer) return;
+  let match = SIGNATURES.find(s => matchAt(currentBuffer, s.hex, s.offset));
+  // special-case MP4/MOV: 'ftyp' at offset 4
+  if(!match && currentBuffer.length > 8){
+    const tag = String.fromCharCode(currentBuffer[4],currentBuffer[5],currentBuffer[6],currentBuffer[7]);
+    if(tag === 'ftyp') match = {name:'MP4/MOV container'};
+  }
+  const magicHex = bytesToHex(currentBuffer.slice(0, Math.min(16, currentBuffer.length)));
+  document.getElementById('sigResult').innerHTML = `
+    <div><b>Detected type</b><br>${match ? escapeHtml(match.name) : 'Unknown / no known signature matched'}</div>
+    <div><b>First 16 bytes</b><br style="line-height:2;">${escapeHtml(magicHex)}</div>
+  `;
+}
+
+/* ---------- 04b: string extraction ---------- */
+function scanStrings(minLen, encoding){
+  const results = [];
+  const buf = currentBuffer;
+  if(!buf) return results;
+
+  if(encoding === 'ascii'){
+    let start = -1;
+    for(let i=0;i<=buf.length;i++){
+      const b = i < buf.length ? buf[i] : 0;
+      const printable = b >= 32 && b <= 126;
+      if(printable){ if(start === -1) start = i; }
+      else{
+        if(start !== -1 && i - start >= minLen){
+          let s = '';
+          for(let k=start;k<i;k++) s += String.fromCharCode(buf[k]);
+          results.push([start, s]);
+        }
+        start = -1;
+      }
+      if(results.length >= 5000) break;
+    }
+  } else { // utf16le
+    let start = -1, chars = [];
+    for(let i=0;i+1<buf.length;i+=2){
+      const code = buf[i] | (buf[i+1]<<8);
+      const printable = code >= 32 && code <= 126;
+      if(printable){ if(start===-1){start=i; chars=[];} chars.push(String.fromCharCode(code)); }
+      else{
+        if(start !== -1 && chars.length >= minLen){ results.push([start, chars.join('')]); }
+        start = -1; chars = [];
+      }
+      if(results.length >= 5000) break;
+    }
+  }
+  return results;
+}
+document.getElementById('runStrings').addEventListener('click', () => {
+  if(!currentBuffer) return;
+  const minLen = Math.max(2, Number(document.getElementById('strMinLen').value) || 4);
+  const encoding = document.getElementById('strEncoding').value;
+  const results = scanStrings(minLen, encoding);
+  const body = document.getElementById('strBody');
+  body.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  results.forEach(([off, s]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="off-cell">${off.toString(16).padStart(8,'0')}</td><td class="asc-cell">${escapeHtml(s)}</td>`;
+    frag.appendChild(tr);
+  });
+  body.appendChild(frag);
+  document.getElementById('strCount').textContent = `${results.length} string${results.length===1?'':'s'} found` + (results.length>=5000 ? ' (capped at 5000 — narrow with a higher min length)' : '');
+  window._lastStrings = results;
+});
+document.getElementById('copyStrings').addEventListener('click', () => {
+  const text = (window._lastStrings || []).map(([off,s]) => s).join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyStrings');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    setTimeout(()=>btn.textContent = orig, 1400);
+  });
+});
+
+/* ---------- 04c: hash digest ---------- */
+async function renderHash(){
+  if(!currentBuffer) return;
+  const el = document.getElementById('hashResult');
+  el.innerHTML = `<div><b>Status</b><br>Computing…</div>`;
+  try{
+    const [sha1, sha256] = await Promise.all([
+      crypto.subtle.digest('SHA-1', currentBuffer),
+      crypto.subtle.digest('SHA-256', currentBuffer),
+    ]);
+    el.innerHTML = `
+      <div><b>SHA-1</b><br>${bufToHexStr(sha1)}</div>
+      <div><b>SHA-256</b><br>${bufToHexStr(sha256)}</div>
+      <div><b>Size</b><br>${fmtBytes(currentBuffer.length)}</div>
+    `;
+  } catch(e){
+    el.innerHTML = `<div><b>Status</b><br>Hashing unavailable in this context (requires a secure/https origin).</div>`;
+  }
+}
+function bufToHexStr(arrBuf){
+  return Array.from(new Uint8Array(arrBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ---------- 00: profile estimate (who/what/when/where/why/how) ---------- */
+const PROFILE_PATTERNS = {
+  email:   /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+  url:     /https?:\/\/[^\s"'<>]{4,}/g,
+  ip:      /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
+  winpath: /[A-Za-z]:\\(?:[^\\\/:*?"<>|\r\n]{1,40}\\)+[^\\\/:*?"<>|\r\n]{0,60}/g,
+  nixpath: /\/(?:usr|home|etc|opt|var)\/[^\s"'<>]{2,60}/g,
+  date:    /\b(19|20)\d{2}[-\/](0[1-9]|1[0-2])[-\/](0[1-9]|[12]\d|3[01])\b/g,
+  tool: [
+    [/Microsoft Visual C\+\+/i, 'Compiled with Microsoft Visual C++'],
+    [/\.NET Framework|mscorlib/i, 'Built on the .NET runtime'],
+    [/Python\d\.\d/i, 'Built or scripted with Python'],
+    [/Node\.js/i, 'Built with Node.js'],
+    [/UnityEngine|Unity Technologies/i, 'Built with the Unity engine'],
+    [/GameMaker/i, 'Built with GameMaker'],
+    [/Adobe/i, 'Created or edited with Adobe software'],
+    [/FFmpeg/i, 'Processed with FFmpeg'],
+    [/WinRAR|7-Zip|WinZip/i, 'Packaged with an archiver tool'],
+    [/GIMP/i, 'Edited with GIMP'],
+    [/Photoshop/i, 'Edited with Photoshop'],
+    [/Delphi|Borland/i, 'Compiled with Borland/Delphi'],
+  ],
+  purpose: [
+    [/setup|install(?:er|shield)?|uninstall/i, 'installer / setup program'],
+    [/license|eula|copyright/i, 'licensing / legal text present'],
+    [/save\s?game|checkpoint|savedata/i, 'save-game data'],
+    [/config|\.ini|preferences|settings/i, 'configuration data'],
+    [/error|exception|stack ?trace|debug/i, 'debug/log output present'],
+    [/http|socket|server|client|packet/i, 'network client/server component'],
+    [/sprite|texture|mesh|shader|level\d/i, 'game asset content'],
+  ],
+};
+
+function extractMatches(strings, re){
+  const found = new Set();
+  re.lastIndex = 0;
+  for(const [,s] of strings){
+    let m;
+    const localRe = new RegExp(re.source, re.flags);
+    while((m = localRe.exec(s)) && found.size < 8){ found.add(m[0]); }
+  }
+  return Array.from(found);
+}
+
+function peTimestamp(buf){
+  // MZ header -> e_lfanew at 0x3C -> PE COFF header timestamp at +8
+  try{
+    if(buf.length < 0x40 || buf[0] !== 0x4D || buf[1] !== 0x5A) return null;
+    const lfanew = buf[0x3C] | (buf[0x3D]<<8) | (buf[0x3E]<<16) | (buf[0x3F]<<24);
+    const tsOff = lfanew + 8;
+    if(buf.length < tsOff + 4) return null;
+    const ts = (buf[tsOff] | (buf[tsOff+1]<<8) | (buf[tsOff+2]<<16) | (buf[tsOff+3]<<24)) >>> 0;
+    if(ts === 0) return null;
+    return new Date(ts * 1000);
+  } catch(e){ return null; }
+}
+
+function buildProfile(){
+  if(!currentBuffer) return;
+  const quickStrings = scanStrings(4, 'ascii').slice(0, 3000);
+
+  const emails = extractMatches(quickStrings, PROFILE_PATTERNS.email);
+  const urls = extractMatches(quickStrings, PROFILE_PATTERNS.url);
+  const ips = extractMatches(quickStrings, PROFILE_PATTERNS.ip);
+  const winpaths = extractMatches(quickStrings, PROFILE_PATTERNS.winpath);
+  const nixpaths = extractMatches(quickStrings, PROFILE_PATTERNS.nixpath);
+  const dates = extractMatches(quickStrings, PROFILE_PATTERNS.date);
+  const tools = PROFILE_PATTERNS.tool.filter(([re]) => quickStrings.some(([,s]) => re.test(s))).map(([,l]) => l);
+  const purposes = PROFILE_PATTERNS.purpose.filter(([re]) => quickStrings.some(([,s]) => re.test(s))).map(([,l]) => l);
+
+  const sigMatch = SIGNATURES.find(s => matchAt(currentBuffer, s.hex, s.offset));
+  const whatType = sigMatch ? sigMatch.name : 'Unknown binary format';
+
+  const peTs = peTimestamp(currentBuffer);
+  let zipDates = [];
+  if(zip){
+    zipDates = Object.values(zip.files).filter(f=>!f.dir && f.date).map(f=>f.date);
+  }
+
+  // usernames pulled from windows paths like C:\Users\NAME\
+  const usernames = new Set();
+  winpaths.forEach(p => { const m = p.match(/Users\\([^\\]+)\\/i); if(m) usernames.add(m[1]); });
+
+  const profile = {
+    who: [
+      ...Array.from(usernames).map(u => `System username referenced: <b>${escapeHtml(u)}</b>`),
+      ...emails.map(e => `Email address found: <b>${escapeHtml(e)}</b>`),
+    ],
+    what: [
+      `File signature: <b>${escapeHtml(whatType)}</b>`,
+      `Size: <b>${fmtBytes(currentBuffer.length)}</b>`,
+      ...purposes.map(p => `Likely contains: <b>${escapeHtml(p)}</b>`),
+    ],
+    when: [
+      ...(peTs ? [`PE compile timestamp: <b>${peTs.toUTCString()}</b>`] : []),
+      ...(zipDates.length ? [`Zip entries dated: <b>${new Date(Math.min(...zipDates)).toLocaleDateString()}</b> to <b>${new Date(Math.max(...zipDates)).toLocaleDateString()}</b>`] : []),
+      ...dates.map(d => `Date string in content: <b>${escapeHtml(d)}</b>`),
+    ],
+    where: [
+      ...urls.map(u => `URL referenced: <b>${escapeHtml(u)}</b>`),
+      ...ips.map(i => `IP address referenced: <b>${escapeHtml(i)}</b>`),
+      ...winpaths.slice(0,5).map(p => `Windows path: <b>${escapeHtml(p)}</b>`),
+      ...nixpaths.slice(0,5).map(p => `Unix path: <b>${escapeHtml(p)}</b>`),
+    ],
+    why: purposes.length ? purposes.map(p => `Signal: <b>${escapeHtml(p)}</b>`) : [],
+    how: tools.map(t => `<b>${escapeHtml(t)}</b>`),
+  };
+
+  window._lastProfile = { whatType, size: currentBuffer.length, peTs, zipDates, emails, urls, ips, winpaths, nixpaths, dates, tools, purposes, usernames: Array.from(usernames) };
+  window._quickStrings = quickStrings;
+
+  const LABELS = {who:'Who', what:'What', when:'When', where:'Where', why:'Why', how:'How'};
+  const grid = document.getElementById('profileGrid');
+  grid.innerHTML = '';
+  Object.keys(LABELS).forEach(key => {
+    const items = profile[key];
+    const card = document.createElement('div');
+    card.className = 'p-card';
+    card.innerHTML = `
+      <div class="p-head">${LABELS[key]} <span class="p-tag ${items.length?'found':'none'}">${items.length ? items.length+' signal'+(items.length===1?'':'s') : 'no signal'}</span></div>
+      ${items.length ? `<ul>${items.slice(0,6).map(i=>`<li>${i}</li>`).join('')}</ul>` : `<div class="empty">Nothing inferable from static signals.</div>`}
+    `;
+    grid.appendChild(card);
+  });
+  const disc = document.createElement('div');
+  disc.className = 'profile-disclaimer';
+  disc.textContent = 'Heuristic estimate only — derived from embedded strings, timestamps and the file signature. Not a verified fact and not a security verdict.';
+  grid.appendChild(disc);
+}
+
+/* ---------- report export ---------- */
+function buildReportText(){
+  const p = window._lastProfile || {};
+  const now = new Date();
+  const lines = [];
+  lines.push('TOOTH PULLER — EXTRACTION REPORT');
+  lines.push('='.repeat(40));
+  lines.push(`Generated: ${now.toISOString()} (${now.toString()})`);
+  lines.push(`Tool source: https://github.com/SauerNinja/Tooth-Puller`);
+  lines.push('');
+  lines.push('-- FILE --');
+  lines.push(`Name: ${currentName || 'n/a'}`);
+  lines.push(`Size: ${currentBuffer ? currentBuffer.length + ' bytes (' + fmtBytes(currentBuffer.length) + ')' : 'n/a'}`);
+  lines.push(`Detected signature: ${p.whatType || 'n/a'}`);
+  lines.push('');
+  lines.push('-- HASH --');
+  const hashEl = document.getElementById('hashResult');
+  if(hashEl){
+    const sha1 = hashEl.querySelector('div:nth-child(1)');
+    const sha256 = hashEl.querySelector('div:nth-child(2)');
+    if(sha1) lines.push('SHA-1:   ' + sha1.textContent.replace('SHA-1',''));
+    if(sha256) lines.push('SHA-256: ' + sha256.textContent.replace('SHA-256',''));
+  }
+  lines.push('');
+  lines.push('-- PROFILE ESTIMATE (heuristic, not verified) --');
+  const sect = (label, arr) => {
+    lines.push(`${label}:`);
+    if(!arr || !arr.length){ lines.push('  (no signal found)'); }
+    else arr.forEach(v => lines.push('  - ' + String(v)));
+    lines.push('');
+  };
+  sect('Who', [...(p.usernames||[]).map(u=>'System username referenced: '+u), ...(p.emails||[]).map(e=>'Email found: '+e)]);
+  sect('What', [p.whatType, ...(p.purposes||[])]);
+  sect('When', [
+    ...(p.peTs ? ['PE compile timestamp: ' + p.peTs.toUTCString()] : []),
+    ...(p.zipDates && p.zipDates.length ? ['Zip entries dated ' + new Date(Math.min(...p.zipDates)).toLocaleDateString() + ' to ' + new Date(Math.max(...p.zipDates)).toLocaleDateString()] : []),
+    ...(p.dates||[]).map(d=>'Date string: '+d),
+  ]);
+  sect('Where', [...(p.urls||[]), ...(p.ips||[]), ...(p.winpaths||[]), ...(p.nixpaths||[])]);
+  sect('Why', (p.purposes||[]));
+  sect('How', (p.tools||[]));
+
+  lines.push('-- STRUCTURE --');
+  const overallEnt = shannonEntropy(currentBuffer);
+  lines.push(`Overall entropy: ${overallEnt.toFixed(2)} / 8.0 bits/byte`);
+  const extEl = document.getElementById('extCheckResult');
+  if(extEl) lines.push('Extension check: ' + extEl.textContent.trim());
+  const pe = parsePESections(currentBuffer);
+  if(pe){
+    lines.push(`PE sections (${pe.sections.length}):`);
+    pe.sections.forEach(s => lines.push(`  - ${s.name || '(unnamed)'}: raw ${s.rawSize}B @ 0x${s.rawPtr.toString(16)}, entropy ${s.entropy.toFixed(2)}${s.entropy>7.5?' [high]':''}`));
+    lines.push(pe.overlay > 0 ? `  Overlay data: ${pe.overlay} bytes appended after last section` : '  No overlay data detected');
+  } else {
+    lines.push('Not a PE file — no section table.');
+  }
+  lines.push('');
+
+  lines.push('-- EXTRACTION CHART --');
+  (window._lastChartResults || []).forEach(([k,v]) => lines.push(`  ${k}: ${v}`));
+  if(!window._lastChartResults || !window._lastChartResults.length) lines.push('  (no fields defined)');
+  lines.push('');
+
+  lines.push('-- EXTRACTED STRINGS --');
+  const strs = (window._lastStrings && window._lastStrings.length) ? window._lastStrings : (window._quickStrings || []);
+  lines.push(`  ${strs.length} string(s) captured${strs.length ? ' (first 50 shown below):' : ''}`);
+  strs.slice(0,50).forEach(([off,s]) => lines.push(`  [${off.toString(16).padStart(8,'0')}] ${s}`));
+  lines.push('');
+  lines.push('-- NOTE --');
+  lines.push('All analysis performed locally in-browser. This report is a static, read-only');
+  lines.push('inspection summary. It is not a malware verdict, legal opinion, or provenance proof.');
+
+  return lines.join('\n');
+}
+
+function downloadReport(){
+  if(!currentBuffer){ return; }
+  const text = buildReportText();
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = (currentName || 'file').replace(/[^a-z0-9._-]/gi, '_');
+  a.href = url;
+  a.download = `tooth-puller-report_${safeName}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+/* ---------- 05: structure — histogram, entropy, PE sections, ext check ---------- */
+function shannonEntropy(buf){
+  if(!buf.length) return 0;
+  const counts = new Uint32Array(256);
+  for(let i=0;i<buf.length;i++) counts[buf[i]]++;
+  let ent = 0;
+  for(let i=0;i<256;i++){
+    if(counts[i] === 0) continue;
+    const p = counts[i] / buf.length;
+    ent -= p * Math.log2(p);
+  }
+  return ent; // 0..8 bits/byte
+}
+
+function renderHistogram(buf){
+  const canvas = document.getElementById('histCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!buf || !buf.length) return;
+  const counts = new Uint32Array(256);
+  for(let i=0;i<buf.length;i++) counts[buf[i]]++;
+  const max = Math.max(...counts) || 1;
+  const w = canvas.width / 256;
+  for(let i=0;i<256;i++){
+    const h = (counts[i] / max) * (canvas.height - 4);
+    const printable = i >= 32 && i <= 126;
+    ctx.fillStyle = printable ? '#4CD6C0' : '#E3A23C';
+    ctx.globalAlpha = counts[i] ? 0.9 : 0.15;
+    ctx.fillRect(i*w, canvas.height - h, Math.max(w-0.3,0.5), h);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function renderEntropyMap(buf){
+  const canvas = document.getElementById('entropyCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!buf || !buf.length) return;
+  const WINDOW = Math.max(64, Math.ceil(buf.length / 400)); // ~400 samples across the file
+  const samples = [];
+  for(let off=0; off<buf.length; off += WINDOW){
+    samples.push(shannonEntropy(buf.slice(off, Math.min(off+WINDOW, buf.length))));
+  }
+  const w = canvas.width / samples.length;
+  samples.forEach((e, i) => {
+    // entropy 0-8 -> color from teal (low) to amber (mid) to rust (high/packed)
+    const t = e / 8;
+    let color;
+    if(t < 0.6) color = '#2C7A6F';
+    else if(t < 0.85) color = '#E3A23C';
+    else color = '#C1502E';
+    ctx.fillStyle = color;
+    ctx.fillRect(i*w, 0, Math.max(w,1), canvas.height);
+  });
+  const overall = shannonEntropy(buf);
+  document.getElementById('entropyNote').innerHTML =
+    `Overall entropy: <b style="color:var(--bone);">${overall.toFixed(2)} / 8.0 bits/byte</b> — ` +
+    (overall > 7.5 ? 'high; consistent with compressed, encrypted, or packed data.' :
+     overall > 6.0 ? 'moderate; mixed content.' :
+     'low; consistent with plain text or structured/sparse data.') +
+    ` Bar color: <span style="color:#2C7A6F;">teal = low</span>, <span style="color:#E3A23C;">amber = moderate</span>, <span style="color:#C1502E;">rust = high (possible packing)</span>, read left→right across the file.`;
+}
+
+function parsePESections(buf){
+  if(buf.length < 0x40 || buf[0] !== 0x4D || buf[1] !== 0x5A) return null;
+  const lfanew = buf[0x3C] | (buf[0x3D]<<8) | (buf[0x3E]<<16) | (buf[0x3F]<<24);
+  if(buf.length < lfanew + 24) return null;
+  if(!(buf[lfanew]===0x50 && buf[lfanew+1]===0x45 && buf[lfanew+2]===0 && buf[lfanew+3]===0)) return null; // 'PE\0\0'
+  const numSections = buf[lfanew+6] | (buf[lfanew+7]<<8);
+  const optHeaderSize = buf[lfanew+20] | (buf[lfanew+21]<<8);
+  const sectionStart = lfanew + 24 + optHeaderSize;
+  const sections = [];
+  for(let i=0;i<numSections;i++){
+    const base = sectionStart + i*40;
+    if(base + 40 > buf.length) break;
+    let name = '';
+    for(let k=0;k<8;k++){ const c = buf[base+k]; if(c===0) break; name += String.fromCharCode(c); }
+    const virtualSize = (buf[base+8]|(buf[base+9]<<8)|(buf[base+10]<<16)|(buf[base+11]<<24))>>>0;
+    const rawSize = (buf[base+16]|(buf[base+17]<<8)|(buf[base+18]<<16)|(buf[base+19]<<24))>>>0;
+    const rawPtr = (buf[base+20]|(buf[base+21]<<8)|(buf[base+22]<<16)|(buf[base+23]<<24))>>>0;
+    const raw = buf.slice(rawPtr, Math.min(rawPtr+rawSize, buf.length));
+    sections.push({name, virtualSize, rawSize, rawPtr, entropy: raw.length ? shannonEntropy(raw) : 0});
+  }
+  const lastEnd = sections.length ? Math.max(...sections.map(s=>s.rawPtr+s.rawSize)) : 0;
+  const overlay = buf.length - lastEnd;
+  return {sections, overlay};
+}
+
+function renderPESections(buf){
+  const area = document.getElementById('peSectionArea');
+  const pe = parsePESections(buf);
+  if(!pe){
+    area.innerHTML = `<div class="empty" style="font-size:13px; color:var(--bone-dim); font-family:var(--sans);">Not a Windows PE file — no section table to show.</div>`;
+    return;
+  }
+  let rows = pe.sections.map(s => `
+    <div class="zip-row">
+      <span class="zpath">${escapeHtml(s.name || '(unnamed)')} — raw ${fmtBytes(s.rawSize)} @ 0x${s.rawPtr.toString(16)}${s.entropy > 7.5 ? ' <span style="color:var(--rust);">⚠ high entropy ('+s.entropy.toFixed(2)+')</span>' : ''}</span>
+      <span class="zsize">${s.entropy.toFixed(2)} bits/B</span>
+    </div>`).join('');
+  area.innerHTML = `
+    <div class="zip-list">${rows}</div>
+    <div class="preset-note">
+      ${pe.sections.length} section(s) parsed from the PE header.
+      ${pe.overlay > 0 ? `<br><span style="color:var(--amber);">⚠ ${fmtBytes(pe.overlay)} of overlay data</span> found after the last declared section — extra bytes appended past the file's official end, a common place to hide a second-stage payload. Not inherently malicious (also used for legitimate signing/resources), just worth noting.` : 'No overlay data detected — file ends where the last section says it should.'}
+    </div>`;
+}
+
+function renderExtensionCheck(buf, name){
+  const sigMatch = SIGNATURES.find(s => matchAt(buf, s.hex, s.offset));
+  const el = document.getElementById('extCheckResult');
+  const ext = (name.match(/\.([a-z0-9]+)$/i) || [,''])[1].toLowerCase();
+  const EXPECTED = {
+    png:['png'], jpg:['jpeg'], jpeg:['jpeg'], gif:['gif'], pdf:['pdf'],
+    zip:['zip'], docx:['zip'], xlsx:['zip'], pptx:['zip'], jar:['zip'], apk:['zip'],
+    exe:['pe'], dll:['pe'], elf:['elf'], bmp:['bmp'], ico:['ico'],
+    wav:['riff'], avi:['riff'], webp:['riff'], mp3:['mp3'], ogg:['ogg'], flac:['flac'],
+    gz:['gzip'], bz2:['bzip2'], '7z':['7-zip'], rar:['rar'], tar:['tar'],
+    mp4:['mp4'], mov:['mp4'], wasm:['webassembly'], xml:['xml'], sqlite:['sqlite'], db:['sqlite'],
+  };
+  const sigLower = sigMatch ? sigMatch.name.toLowerCase() : '';
+  let status, detail;
+  if(!sigMatch){
+    status = 'unknown'; detail = 'No known signature matched — can\'t confirm or deny against the extension.';
+  } else if(!ext){
+    status = 'unknown'; detail = `File has no extension to compare. Detected content is ${sigMatch.name}.`;
+  } else if(EXPECTED[ext] && EXPECTED[ext].some(k => sigLower.includes(k))){
+    status = 'match'; detail = `Extension ".${ext}" matches the detected content (${sigMatch.name}).`;
+  } else if(EXPECTED[ext]){
+    status = 'mismatch'; detail = `⚠ Extension ".${ext}" does NOT match the detected content. Bytes indicate ${sigMatch.name}, not what the extension claims. This is a classic disguise trick (e.g. an executable renamed to look like an image) — worth a second look before opening.`;
+  } else {
+    status = 'unknown'; detail = `No expected-signature mapping for ".${ext}" yet — detected content is ${sigMatch.name}.`;
+  }
+  const color = status==='mismatch' ? 'var(--rust)' : status==='match' ? 'var(--teal)' : 'var(--bone-dim)';
+  el.innerHTML = `<div style="max-width:640px;"><b style="color:${color};">${status==='mismatch'?'⚠ Mismatch':status==='match'?'✓ Match':'? Unclear'}</b><br>${escapeHtml(detail)}</div>`;
+}
+
+function renderStructure(){
+  if(!currentBuffer) return;
+  renderHistogram(currentBuffer);
+  renderEntropyMap(currentBuffer);
+  renderPESections(currentBuffer);
+  renderExtensionCheck(currentBuffer, currentName);
+}
+
+document.getElementById('downloadReportBtn').addEventListener('click', downloadReport);
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const scope = btn.closest('.card');
+    scope.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    scope.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------- zip listing ---------- */
+function renderZipListing(){
+  const listEl = document.getElementById('zipList');
+  const crumbsEl = document.getElementById('zipCrumbs');
+  listEl.innerHTML = '';
+
+  const parts = zipPath.split('/').filter(Boolean);
+  let crumbHtml = `<a href="#" data-path="">root</a>`;
+  let acc = '';
+  parts.forEach(p => { acc += p + '/'; crumbHtml += ` / <a href="#" data-path="${acc}">${escapeHtml(p)}</a>`; });
+  crumbsEl.innerHTML = crumbHtml;
+  crumbsEl.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault(); zipPath = a.dataset.path; renderZipListing();
+  }));
+
+  const seenDirs = new Set();
+  const entries = Object.values(zip.files).filter(f => f.name.startsWith(zipPath));
+
+  entries.forEach(f => {
+    const rel = f.name.slice(zipPath.length);
+    if(!rel) return;
+    const slash = rel.indexOf('/');
+    if(slash !== -1){
+      const dirName = rel.slice(0, slash);
+      if(seenDirs.has(dirName)) return;
+      seenDirs.add(dirName);
+      const row = document.createElement('div');
+      row.className = 'zip-row dir';
+      row.innerHTML = `<span class="zpath">📁 ${escapeHtml(dirName)}/</span>`;
+      row.addEventListener('click', () => { zipPath += dirName + '/'; renderZipListing(); });
+      listEl.appendChild(row);
+    } else if(!f.dir){
+      const row = document.createElement('div');
+      row.className = 'zip-row';
+      row.innerHTML = `<span class="zpath">📄 ${escapeHtml(rel)}</span><span class="zsize">${fmtBytes(f._data ? f._data.uncompressedSize : 0)}</span>`;
+      row.addEventListener('click', () => selectZipEntry(f.name));
+      listEl.appendChild(row);
+    }
+  });
+
+  if(listEl.innerHTML === '') listEl.innerHTML = `<div class="zip-row" style="color:var(--bone-dim);cursor:default;">Empty folder</div>`;
+}
+
+async function selectZipEntry(path){
+  const entry = zip.files[path];
+  if(!entry || entry.dir) return;
+  const buf = await entry.async('uint8array');
+  setCurrentBuffer(buf, path);
+  document.getElementById('sec-hex').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ---------- hex viewer ---------- */
+function renderHexChunk(){
+  if(!currentBuffer) return;
+  const body = document.getElementById('hexBody');
+  const end = Math.min(hexOffset + HEX_CHUNK, currentBuffer.length);
+  const frag = document.createDocumentFragment();
+
+  for(let row = hexOffset; row < end; row += 16){
+    const rowEnd = Math.min(row+16, currentBuffer.length);
+    const slice = currentBuffer.slice(row, rowEnd);
+    let hexStr = '', ascStr = '';
+    for(let k=0;k<slice.length;k++){
+      const b = slice[k];
+      const printable = b >= 32 && b <= 126;
+      hexStr += (printable ? '' : '<b>') + b.toString(16).padStart(2,'0') + (printable ? '' : '</b>') + ' ';
+      ascStr += printable ? String.fromCharCode(b) : '·';
+    }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="off-cell">${row.toString(16).padStart(8,'0')}</td><td class="hex-cell">${hexStr}</td><td class="asc-cell">${escapeHtml(ascStr)}</td>`;
+    frag.appendChild(tr);
+  }
+  body.appendChild(frag);
+  hexOffset = end;
+
+  const wrap = document.getElementById('hexLoadMoreWrap');
+  wrap.style.display = hexOffset < currentBuffer.length ? 'block' : 'none';
+}
+document.getElementById('hexLoadMore').addEventListener('click', renderHexChunk);
+
+/* ---------- extraction chart ---------- */
+let chartFields = [
+  {name:'moniker', type:'bytes', len:4},
+  {name:'name', type:'lstring', len:''},
+];
+const TYPE_OPTIONS = [
+  ['byte','Byte'],['word','Word'],['long','Long'],['bytes','Bytes'],['lstring','LString']
+];
+
+function buildChart(){
+  const wrap = document.getElementById('chartRows');
+  wrap.innerHTML = '';
+
+  let results = [];
+  if(currentBuffer){
+    const ex = new BinaryExtractor(currentBuffer);
+    for(const f of chartFields){
+      let val;
+      try{
+        if(f.type === 'byte') val = ex.readByte();
+        else if(f.type === 'word') val = ex.readWord();
+        else if(f.type === 'long') val = ex.readLong();
+        else if(f.type === 'bytes') val = bytesToHex(ex.readBytes(Number(f.len)||0));
+        else if(f.type === 'lstring') val = ex.readLString();
+      } catch(e){ val = '(out of range)'; }
+      results.push(val);
+    }
+  }
+
+  chartFields.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.className = 'chart-row';
+    row.innerHTML = `
+      <div class="tooth-n">${i+1}</div>
+      <div><input type="text" value="${escapeAttr(f.name)}" data-idx="${i}" data-k="name" placeholder="field name"></div>
+      <div><select data-idx="${i}" data-k="type">${TYPE_OPTIONS.map(([v,l])=>`<option value="${v}" ${f.type===v?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div><input type="text" value="${f.type==='bytes'?escapeAttr(f.len):''}" data-idx="${i}" data-k="len" placeholder="${f.type==='bytes'?'N':'—'}" ${f.type!=='bytes'?'disabled':''}></div>
+      <div class="val" title="${escapeAttr(String(results[i] ?? ''))}">${escapeHtml(String(results[i] ?? (currentBuffer ? '' : 'load a file above')))}</div>
+      <button class="rm" data-idx="${i}" title="remove field">×</button>
+    `;
+    wrap.appendChild(row);
+  });
+
+  wrap.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('change', e => {
+      const idx = Number(e.target.dataset.idx), k = e.target.dataset.k;
+      chartFields[idx][k] = e.target.value;
+      buildChart();
+    });
+  });
+  wrap.querySelectorAll('.rm').forEach(el => {
+    el.addEventListener('click', e => {
+      chartFields.splice(Number(e.target.dataset.idx), 1);
+      buildChart();
+    });
+  });
+
+  window._lastChartResults = chartFields.map((f,i) => [f.name || `field${i+1}`, results[i]]);
+}
+
+document.getElementById('addRow').addEventListener('click', () => {
+  chartFields.push({name:`field${chartFields.length+1}`, type:'byte', len:''});
+  buildChart();
+});
+document.getElementById('resetChart').addEventListener('click', () => {
+  chartFields = [];
+  buildChart();
+});
+document.getElementById('loadPreset').addEventListener('click', () => {
+  chartFields = [
+    {name:'moniker', type:'bytes', len:4},
+    {name:'name', type:'lstring', len:''},
+    {name:'mother', type:'bytes', len:4},
+    {name:'mother_name', type:'lstring', len:''},
+    {name:'father', type:'bytes', len:4},
+    {name:'father_name', type:'lstring', len:''},
+    {name:'birthday', type:'lstring', len:''},
+    {name:'birthplace', type:'lstring', len:''},
+    {name:'owner_name', type:'lstring', len:''},
+    {name:'owner_url', type:'lstring', len:''},
+    {name:'owner_notes', type:'lstring', len:''},
+    {name:'owner_email', type:'lstring', len:''},
+    {name:'state', type:'long', len:''},
+    {name:'gender', type:'long', len:''},
+    {name:'age', type:'long', len:''},
+    {name:'epitaph', type:'lstring', len:''},
+    {name:'grave_picture', type:'long', len:''},
+    {name:'time_of_death', type:'long', len:''},
+    {name:'time_of_birth', type:'long', len:''},
+    {name:'time_of_adolescence', type:'long', len:''},
+    {name:'is_death_registered', type:'long', len:''},
+    {name:'genus', type:'long', len:''},
+    {name:'long_stage', type:'long', len:''},
+    {name:'chemicals_at_death', type:'bytes', len:256},
+  ];
+  buildChart();
+});
+document.getElementById('copyJson').addEventListener('click', () => {
+  const obj = {};
+  (window._lastChartResults || []).forEach(([k,v]) => obj[k]=v);
+  navigator.clipboard.writeText(JSON.stringify(obj, null, 2)).then(() => {
+    const btn = document.getElementById('copyJson');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    setTimeout(()=>btn.textContent = orig, 1400);
+  });
+});
+
+/* ---------- helpers ---------- */
+function fmtBytes(n){
+  if(n === undefined) return '—';
+  if(n < 1024) return n + ' B';
+  if(n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/1024/1024).toFixed(2) + ' MB';
+}
+function escapeHtml(s){ return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function escapeAttr(s){ return String(s).replace(/"/g, '&quot;'); }
+
+buildChart(); // initial render of default chart (no file yet)
+</script>
+</body>
+</html>
